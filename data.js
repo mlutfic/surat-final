@@ -19,6 +19,7 @@ const OFFICE = {
 
 const APP_INFO = {
   nama: "DILAN CERDAS",
+  wilayah: "Kecamatan Air Hitam",
   kepanjangan: "Digitalisasi Layanan yang Cepat, Responsif, Dinamis, Akuntabel, dan Sistematis",
   tagline: "Layanan digital Kecamatan Air Hitam untuk warga dan petugas.",
   latar:
@@ -68,6 +69,7 @@ const JENIS_LAYANAN = [
   "Surat Rekomendasi Penggantian Antar Waktu BPD",
   "Surat Rekomendasi Rotasi / Pemberhentian / Pengisian / Pelantikan Perangkat Desa",
   "Surat Rekomendasi Nikah",
+  "Lainnya",
 ];
 
 const SURAT_MASUK = [

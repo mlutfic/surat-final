@@ -3,6 +3,8 @@
             Data Kepegawaian, Manajemen Akun
    ============================================================ */
 
+const ORG_PDF_SRC = "assets/struktur-organisasi-kantor-camat-air-hitam-2026.pdf";
+
 /* ---------- Profil Kantor ---------- */
 function ProfilKantor() {
   const info = [
@@ -50,7 +52,7 @@ function ProfilKantor() {
               <img src="assets/sarolangun-logo.jpeg" alt="" />
             </div>
             <h3 style={{ fontSize: 16 }}>{APP_INFO.nama}</h3>
-            <div className="muted" style={{ fontSize: 13, marginTop: 3 }}>{OFFICE.pemda}</div>
+            <div className="muted" style={{ fontSize: 13, marginTop: 3 }}>{APP_INFO.wilayah}</div>
             <div className="row gap-2 center" style={{ marginTop: 10, justifyContent: "center" }}>
               <span className="badge b-ok"><Icon name="shield" size={12} />Terverifikasi</span>
               <span className="badge b-biasa"><Icon name="globe" size={12} />Publik</span>
@@ -84,80 +86,31 @@ function OrgNode({ name, role, head }) {
 }
 
 function StrukturOrganisasi() {
-  const sekretariat = [
-    { name: "JIMMI KELLY, S.E.",    role: "Kasubbag Umum & Kepegawaian",            staff: ["SA'ARANI, S.Pd", "MISWATI", "FITRI ANDANI", "AYU LESTARI"] },
-    { name: "USMAN KHOLIQ, S.E.",   role: "Kasubbag Keuangan, Aset dan Program",    staff: ["NASODIN, S.IP", "BUSTARI", "AHMAD ZIADI"] },
-  ];
-  const seksi = [
-    { name: "DEDI SANTOSO, S.AP",                       role: "Kasi Pemerintahan",           staff: ["DAFIT HAYATULLOH AS, A.Md.Kom", "MUJITO", "HASIM", "IDAM KHOLID, S.Pd"] },
-    { name: "Belum tercantum",                          role: "Kasi Trantib",                staff: [] },
-    { name: "IBNU SYATIR, S.Pd",                        role: "Kasi PMD dan Kelurahan",       staff: ["ABDUL AZIZ", "PUJIATI, S.E.", "AHMAD NURYADIN", "AHMAD DAIROBI"] },
-    { name: "MUALIMIN, A.Md.Kep",                       role: "Kasi Kesejahteraan Sosial",   staff: ["HERMANTO", "EDWAR EFENDI", "AKLIMA, S.Sos"] },
-    { name: "Ir. MUHAMMAD SYAFA'AT, S.P., M.E., IPM",  role: "Kasi Pelayanan Umum",         staff: ["SITI AJRAH", "PAHRUL. AB", "SAIJUL", "BENNI KUSNADI"] },
-  ];
-
   return (
     <>
       <PageHead
         crumb={["Profil", "Struktur Organisasi"]}
         title="Struktur Organisasi"
-        sub={`Bagan organisasi dan tata kerja ${OFFICE.nama}`}
+        sub={`Dokumen struktur organisasi ${APP_INFO.wilayah}`}
         actions={
-          <button className="btn btn-ghost">
-            <Icon name="print" size={15} />Cetak Bagan
-          </button>
+          <a className="btn btn-primary" href={ORG_PDF_SRC} target="_blank" rel="noreferrer">
+            <Icon name="download" size={15} />Buka PDF
+          </a>
         }
       />
-      <div className="card card-pad" style={{ overflowX: "auto" }}>
-        <div className="org" style={{ minWidth: 1020, padding: "12px 0 8px" }}>
-
-          {/* Camat */}
-          <OrgNode head name={OFFICE.kepala} role={`${OFFICE.jabatanKepala} · ${OFFICE.pangkatKepala}`} />
-          <div className="org-connector" />
-
-          {/* Level 2: Fungsional + Sekretaris */}
-          <div className="org-row" style={{ alignItems: "flex-start" }}>
-            <div className="col center">
-              <OrgNode name="Kelompok Jabatan Fungsional" role="Fungsional" />
-            </div>
-            <div className="col center">
-              <OrgNode name="ZULKARNAIN, S.E." role="Sekretaris Kecamatan Air Hitam · III/d" />
-              <div className="org-connector" />
-              <div className="org-row">
-                {sekretariat.map(b => (
-                  <div key={b.role} className="col center">
-                    <OrgNode name={b.name} role={b.role} />
-                    <div className="org-connector" />
-                    <div className="col gap-2" style={{ alignItems: "stretch", width: 210 }}>
-                      {b.staff.map(s => (
-                        <div key={s} className="org-staff-box">{s}</div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+      <div className="card org-pdf-shell">
+        <div className="org-pdf-toolbar">
+          <div>
+            <h3>Struktur Organisasi Kantor Camat Air Hitam Tahun 2026</h3>
+            <p>Dokumen ditampilkan sesuai file PDF resmi yang diberikan.</p>
           </div>
-
-          <div className="org-connector" />
-          <div style={{ width: "88%", height: 2, background: "var(--line)" }} />
-
-          {/* Level 3: Seksi-seksi */}
-          <div className="org-row" style={{ alignItems: "flex-start" }}>
-            {seksi.map(b => (
-              <div key={b.role} className="col center">
-                <div className="org-connector" />
-                <OrgNode name={b.name} role={b.role} />
-                <div className="org-connector" />
-                <div className="col gap-2" style={{ alignItems: "stretch", width: 180 }}>
-                  {(b.staff.length ? b.staff : ["Data staf belum tercantum"]).map(s => (
-                    <div key={s} className="org-staff-box" style={!b.staff.length ? { color: "var(--faint)", fontStyle: "italic" } : {}}>{s}</div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-
+          <a className="btn btn-ghost" href={ORG_PDF_SRC} target="_blank" rel="noreferrer">
+            <Icon name="eye" size={15} />Lihat penuh
+          </a>
+        </div>
+        <iframe className="org-pdf-frame" title="Struktur Organisasi Kantor Camat Air Hitam Tahun 2026" src={ORG_PDF_SRC}></iframe>
+        <div className="org-pdf-fallback">
+          Jika PDF tidak tampil, buka dokumen melalui tombol <b>Lihat penuh</b>.
         </div>
       </div>
     </>

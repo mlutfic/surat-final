@@ -59,6 +59,7 @@ const PUBLIC_SERVICES = [
   { icon: "sitemap", title: "Rekomendasi PAW BPD", desc: "Untuk penggantian antar waktu BPD.", badge: "Pemerintahan", tone: "internal" },
   { icon: "building", title: "Rekomendasi Perangkat Desa", desc: "Untuk rotasi, pengisian, atau pelantikan perangkat desa.", badge: "Pemerintahan", tone: "internal" },
   { icon: "mail", title: "Rekomendasi Nikah", desc: "Untuk kebutuhan rekomendasi nikah.", badge: "Sosial", tone: "public" },
+  { icon: "fileplus", title: "Lainnya", desc: "Untuk permohonan lain yang belum masuk kategori layanan utama.", badge: "Fleksibel", tone: "public" },
 ];
 
 const PUBLIC_IMPACT = [
@@ -72,7 +73,7 @@ const PUBLIC_IMPACT = [
 ];
 
 const PUBLIC_STATS = [
-  { value: "6", label: "Jenis layanan", icon: "doc" },
+  { value: "7", label: "Jenis layanan", icon: "doc" },
   { value: "Online", label: "Informasi layanan", icon: "globe" },
   { value: "IKM", label: "Survei kepuasan", icon: "survey" },
   { value: "Aduan", label: "Kanal warga", icon: "megaphone" },
@@ -103,7 +104,7 @@ function Login({ onLogin, onPublic }) {
               <span className="login-brand-mark"><img src={LOGO_SRC} alt="" /></span>
               <span>
                 <strong>{APP_INFO.nama}</strong>
-                <small>{OFFICE.pemda}</small>
+                <small>{APP_INFO.wilayah}</small>
               </span>
             </div>
           </div>
@@ -354,12 +355,12 @@ function PublicAboutSection() {
         <aside className="public-about-panel">
           <div className="public-about-panel-top">
             <span className="public-about-logo"><img src={LOGO_SRC} alt="" /></span>
-            <span className="public-about-kicker">Kecamatan Air Hitam</span>
+            <span className="public-about-kicker">{APP_INFO.wilayah}</span>
           </div>
           <h3>Transformasi layanan publik dalam satu kanal digital.</h3>
           <p>{APP_INFO.tagline}</p>
           <div className="public-about-metrics">
-            <span><b>6</b> Jenis layanan</span>
+            <span><b>7</b> Jenis layanan</span>
             <span><b>SPBE</b> Selaras digital</span>
             <span><b>IKM</b> Terukur berkala</span>
           </div>
@@ -460,7 +461,6 @@ function PublicAdministrationSection() {
 }
 
 function PublicLanding({ onLogin, focusSection, onFocusHandled }) {
-  const regionName = OFFICE.pemda.replace(/^Pemerintah\s+/i, "");
   const [navOpen, setNavOpen] = useState(false);
   const rootRef = useRef(null);
 
@@ -587,7 +587,7 @@ function PublicLanding({ onLogin, focusSection, onFocusHandled }) {
               <span className="public-brand-mark"><img src={LOGO_SRC} alt="" /></span>
               <span>
                 <strong>{APP_INFO.nama}</strong>
-                <small>{regionName}</small>
+                <small>{APP_INFO.wilayah}</small>
               </span>
             </a>
             <button
@@ -616,7 +616,6 @@ function PublicLanding({ onLogin, focusSection, onFocusHandled }) {
         <div className="public-hero-inner">
           <div className="public-hero-showcase">
             <div className="public-hero-copy">
-              <div className="public-pill"><span></span>INOVASI PELAYANAN PUBLIK · IGA 2026</div>
               <h1 className="public-hero-title">
                 <span>{APP_INFO.nama}</span>
                 <span><em className="gold">Portal Layanan Digital</em></span>
@@ -743,7 +742,7 @@ function PublicLanding({ onLogin, focusSection, onFocusHandled }) {
                 <span className="public-brand-mark"><img src={LOGO_SRC} alt="" /></span>
                 <span>
                   <strong>{APP_INFO.nama}</strong>
-                  <small>{regionName}</small>
+                  <small>{APP_INFO.wilayah}</small>
                 </span>
               </div>
               <p className="public-footer-copy">
@@ -788,7 +787,7 @@ function Sidebar({ role, screen, go, open, onClose }) {
       <aside className={"sidebar " + (open ? "open" : "")}>
         <div className="brand">
           <div className="emblem"><img src={LOGO_SRC} alt="" /></div>
-          <div className="col"><span className="bt">{APP_INFO.nama}</span><span className="bs">Kecamatan Air Hitam</span></div>
+          <div className="col"><span className="bt">{APP_INFO.nama}</span><span className="bs">{APP_INFO.wilayah}</span></div>
         </div>
         <nav className="nav">
           {NAV.map(grp => {
