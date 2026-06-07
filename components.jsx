@@ -100,4 +100,66 @@ function EmptyHint({ icon, children }) {
   );
 }
 
-Object.assign(window, { Avatar, SifatBadge, StatusBadge, RowActions, PageHead, Field, Dropzone, WaPreview, EmptyHint });
+/* Reusable pagination bar */
+function Pagination({ current = 1, total = 1, onPage }) {
+  const pages = Array.from({ length: Math.min(total, 5) }, (_, i) => i + 1);
+  return (
+    <div className="row between center" style={{ padding: "13px 18px", borderTop: "1px solid var(--line)" }}>
+      <span className="muted" style={{ fontSize: 12.5 }}>
+        Halaman {current} dari {total}
+      </span>
+      <div className="pagination">
+        <button className="pg-btn" disabled={current <= 1} onClick={() => onPage?.(current - 1)}>
+          ← Sebelumnya
+        </button>
+        {pages.map(p => (
+          <button key={p} className={"pg-btn " + (p === current ? "active" : "")} onClick={() => onPage?.(p)}>
+            {p}
+          </button>
+        ))}
+        {total > 5 && <span style={{ fontSize: 12.5, color: "var(--muted)", padding: "0 4px" }}>…</span>}
+        <button className="pg-btn" disabled={current >= total} onClick={() => onPage?.(current + 1)}>
+          Berikutnya →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* WhatsApp notification toggle banner */
+function WaBanner({ label, hint, on = true, onChange }) {
+  const [active, setActive] = useState(on);
+  function toggle() { setActive(v => { onChange?.(!v); return !v; }); }
+  return (
+    <div className="wa-banner">
+      <span style={{ color: "var(--ok)" }}><Icon name="whatsapp" size={20} /></span>
+      <div className="grow">
+        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{label}</div>
+        <div className="hint">{hint}</div>
+      </div>
+      <button type="button" className="wa-toggle" onClick={toggle} aria-label="Toggle WA notifikasi">
+        <span className={"wa-toggle-track" + (active ? "" : " off")}></span>
+        <span className={"wa-toggle-thumb" + (active ? "" : " off")}></span>
+      </button>
+    </div>
+  );
+}
+
+/* Table footer with count info + pagination */
+function TableFooter({ shown, total, label = "surat", currentPage = 1, totalPages = 1, onPage }) {
+  const from = (currentPage - 1) * shown + 1;
+  const to = Math.min(currentPage * shown, total);
+  return (
+    <Pagination
+      current={currentPage}
+      total={totalPages}
+      onPage={onPage}
+    />
+  );
+}
+
+Object.assign(window, {
+  Avatar, SifatBadge, StatusBadge, RowActions, PageHead,
+  Field, Dropzone, WaPreview, WaBanner, EmptyHint,
+  Pagination, TableFooter,
+});

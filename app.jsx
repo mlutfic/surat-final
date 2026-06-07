@@ -7,6 +7,7 @@ const ROLES = ["User", "Admin", "Super Admin"];
 const NAV = [
   { group: "Utama", items: [
     { id: "dashboard", label: "Dashboard", icon: "dashboard", roles: ROLES },
+    { id: "tentang-aplikasi", label: "Tentang Aplikasi", icon: "globe", roles: ROLES },
   ]},
   { group: "Persuratan", items: [
     { id: "rekap-masuk", label: "Rekap Surat Masuk", icon: "inbox", roles: ROLES, count: "148" },
@@ -30,6 +31,7 @@ const NAV = [
 
 const SCREENS = {
   dashboard: (p) => <Dashboard {...p} />,
+  "tentang-aplikasi": () => <TentangAplikasi />,
   "rekap-masuk": (p) => <RekapSuratMasuk {...p} />,
   "rekap-keluar": (p) => <RekapSuratKeluar {...p} />,
   "form-masuk": (p) => <FormSuratMasuk {...p} />,
@@ -42,36 +44,47 @@ const SCREENS = {
   akun: () => <ManajemenAkun />,
 };
 
+const LOGO_SRC = "assets/sarolangun-logo.jpeg";
+
 const ROLE_META = {
-  "User": { icon: "user", color: "var(--info)", bg: "var(--info-bg)", desc: "Operator persuratan — input & lihat surat" },
-  "Admin": { icon: "usercog", color: "var(--navy-700)", bg: "var(--navy-100)", desc: "Kelola surat, pegawai & layanan publik" },
-  "Super Admin": { icon: "shield", color: "var(--purple)", bg: "var(--purple-bg)", desc: "Akses penuh termasuk manajemen akun" },
+  "User": { icon: "user", color: "var(--info)", bg: "var(--info-bg)", desc: "Input dan cek surat" },
+  "Admin": { icon: "usercog", color: "var(--navy-700)", bg: "var(--navy-100)", desc: "Surat, layanan, dan SDM" },
+  "Super Admin": { icon: "shield", color: "var(--purple)", bg: "var(--purple-bg)", desc: "Akses penuh sistem" },
 };
 
 const PUBLIC_SERVICES = [
-  { icon: "inbox", title: "Pencatatan Surat Masuk", desc: "Registrasi surat & permohonan dengan nomor agenda otomatis.", badge: "Internal", tone: "internal" },
-  { icon: "send", title: "Penerbitan Surat Keluar", desc: "Penyusunan, penomoran, dan penerbitan surat resmi.", badge: "Internal", tone: "internal" },
-  { icon: "send", title: "Pengelolaan Disposisi", desc: "Penerusan surat ke tujuan disertai notifikasi WhatsApp.", badge: "Internal", tone: "internal" },
-  { icon: "doc", title: "Arsip & Rekap Digital", desc: "Pencarian, filter, cetak, dan ekspor data surat.", badge: "Internal", tone: "internal" },
-  { icon: "mail", title: "Layanan Pengaduan", desc: "Kanal aduan masyarakat tanpa perlu membuat akun.", badge: "Publik", tone: "public" },
-  { icon: "star", title: "Survei Kepuasan (IKM)", desc: "Kuesioner 9 unsur, terekap otomatis menjadi indeks.", badge: "Publik", tone: "public" },
+  { icon: "idcard", title: "Pengantar Perbaikan Data KTP", desc: "Untuk koreksi atau pembaruan data KTP.", badge: "Administrasi", tone: "public" },
+  { icon: "users", title: "Pengantar Perbaikan Data KK", desc: "Untuk perbaikan data atau pemisahan KK.", badge: "Administrasi", tone: "public" },
+  { icon: "megaphone", title: "Rekomendasi Izin Kegiatan", desc: "Untuk kegiatan atau keramaian masyarakat.", badge: "Rekomendasi", tone: "public" },
+  { icon: "sitemap", title: "Rekomendasi PAW BPD", desc: "Untuk penggantian antar waktu BPD.", badge: "Pemerintahan", tone: "internal" },
+  { icon: "building", title: "Rekomendasi Perangkat Desa", desc: "Untuk rotasi, pengisian, atau pelantikan perangkat desa.", badge: "Pemerintahan", tone: "internal" },
+  { icon: "mail", title: "Rekomendasi Nikah", desc: "Untuk kebutuhan rekomendasi nikah.", badge: "Sosial", tone: "public" },
 ];
 
 const PUBLIC_IMPACT = [
-  { aspect: "Waktu pencatatan per surat", before: "± 15 menit", after: "± 2 menit" },
-  { aspect: "Waktu disposisi ke tujuan", before: "1–3 hari", after: "< 1 jam (notifikasi WA)" },
-  { aspect: "Penelusuran arsip lama", before: "Menit-jam (manual)", after: "< 10 detik (pencarian)" },
-  { aspect: "Surat hilang / tercecer", before: "Terjadi berkala", after: "0% (terarsip digital)" },
-  { aspect: "Tindak lanjut pengaduan", before: "Tidak terlacak", after: "Maks. 3 hari kerja" },
-  { aspect: "Pengukuran kepuasan", before: "Tidak rutin", after: "Otomatis — IKM 87,4" },
-  { aspect: "Penggunaan kertas & ATK", before: "Tinggi", after: "Berkurang signifikan" },
+  { aspect: "Model pelayanan", before: "Manual dan bergantung pada dokumen fisik", after: "Pelayanan berbasis digital" },
+  { aspect: "Proses administrasi", before: "Relatif lambat", after: "Lebih cepat dan terstruktur" },
+  { aspect: "Arsip dokumen", before: "Konvensional dan tersebar", after: "Arsip digital terintegrasi" },
+  { aspect: "Akses informasi layanan", before: "Terbatas", after: "Mudah diakses masyarakat" },
+  { aspect: "Pengaduan masyarakat", before: "Belum terkelola optimal", after: "Terintegrasi dan responsif" },
+  { aspect: "Monitoring pelayanan", before: "Belum maksimal", after: "Evaluasi lebih sistematis" },
+  { aspect: "Koordinasi petugas", before: "Kurang efektif", after: "Lebih cepat dan efisien" },
 ];
 
 const PUBLIC_STATS = [
-  { value: "12", label: "Modul terpadu dalam satu sistem" },
-  { value: "87,4", label: "Indeks Kepuasan Masyarakat — Sangat Baik" },
-  { value: "<1 jam", label: "Waktu disposisi via notifikasi WhatsApp" },
-  { value: "0%", label: "Surat hilang — 100% terarsip digital" },
+  { value: "6", label: "Jenis layanan", icon: "doc" },
+  { value: "Online", label: "Informasi layanan", icon: "globe" },
+  { value: "IKM", label: "Survei kepuasan", icon: "survey" },
+  { value: "Aduan", label: "Kanal warga", icon: "megaphone" },
+];
+
+const PUBLIC_FLOW = [
+  { title: "Ajukan", desc: "Warga memilih layanan dan menyiapkan berkas." },
+  { title: "Verifikasi", desc: "Petugas mengecek data dan kelengkapan." },
+  { title: "Proses", desc: "Permohonan diteruskan ke unit terkait." },
+  { title: "Terbit", desc: "Surat atau rekomendasi diterbitkan." },
+  { title: "Arsip", desc: "Dokumen tersimpan sebagai arsip digital." },
+  { title: "Evaluasi", desc: "Aduan dan IKM dipakai untuk perbaikan layanan." },
 ];
 
 /* ---------- Login ---------- */
@@ -79,85 +92,58 @@ function Login({ onLogin, onPublic }) {
   const [role, setRole] = useState("Super Admin");
   return (
     <div className="login-wrap">
-      <div className="login-side">
-        <div className="login-grid-lines"></div>
-        <div className="deco"></div>
-        <div style={{ position: "relative" }}>
-          <div className="row gap-3 center">
-            <div className="brand" style={{ padding: 0 }}>
-              <div className="emblem"><Icon name="mail" size={22} style={{ color: "#fff" }} /></div>
-            </div>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>SISTEM SURAT</div>
-              <div style={{ fontSize: 11.5, color: "oklch(0.72 0.03 256)" }}>e-Persuratan Terpadu</div>
-            </div>
-          </div>
-        </div>
-        <div style={{ position: "relative" }}>
-          <div className="eyebrow" style={{ color: "var(--gold-400)" }}>Aplikasi Surat Masuk & Surat Keluar</div>
-          <h1 style={{ color: "#fff", fontSize: 34, lineHeight: 1.15, marginTop: 14, letterSpacing: "-0.02em" }}>
-            Tata kelola persuratan yang rapi, cepat, dan transparan.
-          </h1>
-          <p style={{ color: "oklch(0.78 0.02 256)", fontSize: 14.5, lineHeight: 1.65, marginTop: 16, maxWidth: 420 }}>
-            Catat surat masuk & keluar, kelola disposisi, layani pengaduan masyarakat, dan ukur kepuasan layanan dalam satu sistem.
-          </p>
-          <div className="row gap-4 wrap" style={{ marginTop: 28 }}>
-            {[["inbox", "Surat Masuk"], ["send", "Surat Keluar"], ["megaphone", "Pengaduan"], ["survey", "Survei IKM"]].map(([ic, t]) => (
-              <div key={t} className="row gap-2 center" style={{ color: "oklch(0.82 0.02 256)", fontSize: 13, fontWeight: 500 }}>
-                <span style={{ color: "var(--gold-400)" }}><Icon name={ic} size={16} /></span>{t}
-              </div>
-            ))}
-          </div>
-        </div>
-        <div style={{ position: "relative", color: "oklch(0.6 0.03 256)", fontSize: 11.5 }}>
-          © 2026 {OFFICE.pemda} · {OFFICE.nama}
-        </div>
-      </div>
-
       <div className="login-form-side">
         <div className="login-card">
-          <div className="brand" style={{ padding: 0, marginBottom: 22 }}>
-            <div className="emblem"><Icon name="mail" size={22} style={{ color: "#fff" }} /></div>
-            <div className="col"><span className="bt" style={{ color: "var(--ink)" }}>SISTEM SURAT</span><span className="bs" style={{ color: "var(--muted)" }}>{OFFICE.pemda}</span></div>
+          <button type="button" className="login-back-link" onClick={() => onPublic?.()}>
+            <Icon name="arrowleft" size={15} /> Landing Page
+          </button>
+
+          <div className="login-card-brand">
+            <div className="login-brand-lockup login-brand-lockup-dark">
+              <span className="login-brand-mark"><img src={LOGO_SRC} alt="" /></span>
+              <span>
+                <strong>{APP_INFO.nama}</strong>
+                <small>{OFFICE.pemda}</small>
+              </span>
+            </div>
           </div>
-          <h2 style={{ fontSize: 22 }}>Masuk ke Akun Anda</h2>
-          <p className="muted" style={{ fontSize: 13.5, marginTop: 5, marginBottom: 20 }}>Pilih peran lalu masuk untuk melanjutkan.</p>
+
+          <h1 className="login-card-title">Masuk</h1>
+          <p className="login-card-subtitle">Gunakan akun petugas yang terdaftar.</p>
 
           <div className="field" style={{ marginBottom: 14 }}>
             <label>Masuk sebagai</label>
-            <div className="role-pick">
-              {ROLES.map(r => {
-                const m = ROLE_META[r];
-                return (
-                  <button type="button" key={r} className={"role-opt " + (role === r ? "sel" : "")} onClick={() => setRole(r)}>
-                    <span className="ri" style={{ background: m.bg, color: m.color }}><Icon name={m.icon} size={20} /></span>
-                    <span style={{ flex: 1 }}><span className="rt">{r}</span><span className="rd" style={{ display: "block" }}>{m.desc}</span></span>
-                    <span className="rcheck"><Icon name="check" size={18} /></span>
-                  </button>
-                );
-              })}
+            <div className="login-role-tabs">
+              {ROLES.map(r => (
+                <button type="button" key={r} className={role === r ? "sel" : ""} onClick={() => setRole(r)}>
+                  {r}
+                </button>
+              ))}
             </div>
           </div>
 
-          <Field label="Nama Pengguna"><div className="row" style={{ position: "relative" }}><span style={{ position: "absolute", left: 12, top: 12, color: "var(--faint)" }}><Icon name="user" size={16} /></span><input className="input" style={{ paddingLeft: 38 }} defaultValue="bambang.wijaya" /></div></Field>
+          <Field label="Nama Pengguna">
+            <div className="login-input-shell">
+              <span><Icon name="user" size={16} /></span>
+              <input className="input" defaultValue="fathurrahman" />
+            </div>
+          </Field>
           <div style={{ height: 14 }}></div>
-          <Field label="Kata Sandi"><div className="row" style={{ position: "relative" }}><span style={{ position: "absolute", left: 12, top: 12, color: "var(--faint)" }}><Icon name="lock" size={16} /></span><input className="input" style={{ paddingLeft: 38 }} type="password" defaultValue="password" /></div></Field>
+          <Field label="Kata Sandi">
+            <div className="login-input-shell">
+              <span><Icon name="lock" size={16} /></span>
+              <input className="input" type="password" defaultValue="password" />
+            </div>
+          </Field>
 
-          <div className="row between center" style={{ margin: "16px 0 18px" }}>
-            <label className="row gap-2 center" style={{ fontSize: 12.5, color: "var(--ink-soft)", cursor: "pointer" }}><input type="checkbox" defaultChecked />Ingat saya</label>
-            <a style={{ fontSize: 12.5, color: "var(--navy-600)", fontWeight: 600 }}>Lupa sandi?</a>
+          <div className="login-meta-row">
+            <label><input type="checkbox" defaultChecked />Ingat saya</label>
+            <a>Lupa sandi?</a>
           </div>
 
-          <button type="button" className="btn btn-primary" style={{ width: "100%", justifyContent: "center", padding: "12px" }} onClick={() => onLogin(role)}>
-            Masuk sebagai {role}<Icon name="chevright" size={16} />
+          <button type="button" className="login-submit" onClick={() => onLogin(role)}>
+            Masuk <Icon name="chevright" size={16} />
           </button>
-          <p className="muted" style={{ fontSize: 11.5, textAlign: "center", marginTop: 16, lineHeight: 1.6 }}>
-            Bukan pegawai?{" "}
-            <button type="button" className="login-inline-link" onClick={() => onPublic?.("pengaduan")}>Ajukan pengaduan</button>
-            {" "}atau{" "}
-            <button type="button" className="login-inline-link" onClick={() => onPublic?.("survei-ikm")}>isi survei kepuasan</button>
-            {" "}tanpa masuk.
-          </p>
         </div>
       </div>
     </div>
@@ -256,11 +242,231 @@ function PublicSurveyCard() {
   );
 }
 
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" && window.matchMedia &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* Count-up number that animates when scrolled into view */
+function useCountUp(target, { decimals = 0, duration = 1500 } = {}) {
+  const ref = useRef(null);
+  const [val, setVal] = useState(prefersReducedMotion() ? target : 0);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || prefersReducedMotion()) { setVal(target); return; }
+    let raf;
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        io.disconnect();
+        const start = performance.now();
+        const step = (now) => {
+          const p = Math.min(1, (now - start) / duration);
+          const eased = 1 - Math.pow(1 - p, 3);
+          setVal(target * eased);
+          if (p < 1) raf = requestAnimationFrame(step);
+          else setVal(target);
+        };
+        raf = requestAnimationFrame(step);
+      });
+    }, { threshold: 0.45 });
+    io.observe(el);
+    return () => { io.disconnect(); cancelAnimationFrame(raf); };
+  }, [target, decimals, duration]);
+  const text = decimals ? val.toFixed(decimals).replace(".", ",") : String(Math.round(val));
+  return [ref, text];
+}
+
+/* Animated hero background — drifting orbs, panning grid, cursor spotlight, particles */
+function PublicHeroBackground() {
+  const particles = Array.from({ length: 22 });
+  return (
+    <div className="public-hero-bg" aria-hidden="true">
+      <div className="hb-grid"></div>
+      <div className="hb-orb hb-orb-1"></div>
+      <div className="hb-orb hb-orb-2"></div>
+      <div className="hb-orb hb-orb-3"></div>
+      <div className="hb-orb hb-orb-4"></div>
+      <div className="hb-beam"></div>
+      <div className="hb-particles">
+        {particles.map((_, i) => <span key={i} style={{ "--p": i }}></span>)}
+      </div>
+      <div className="hb-spot"></div>
+    </div>
+  );
+}
+
+function PublicAppPreview() {
+  const [r1, v1] = useCountUp(148);
+  const [r2, v2] = useCountUp(231);
+  const [r3, v3] = useCountUp(87.4, { decimals: 1 });
+  return (
+    <div className="public-app-preview" aria-hidden="true">
+      <div className="public-preview-window">
+        <div className="public-preview-topbar">
+          <span></span><span></span><span></span>
+          <b>DILAN CERDAS</b>
+        </div>
+        <div className="public-preview-body">
+          <aside className="public-preview-sidebar">
+            <div className="public-preview-brand"></div>
+            {["Dashboard", "Surat Masuk", "Layanan", "IKM"].map((item, index) => (
+              <div key={item} className={"public-preview-nav " + (index === 0 ? "on" : "")}>{item}</div>
+            ))}
+          </aside>
+          <main className="public-preview-main">
+            <div className="public-preview-head">
+              <div>
+                <span>Ringkasan layanan</span>
+                <strong>Kecamatan Air Hitam</strong>
+              </div>
+              <button>Surat Baru</button>
+            </div>
+            <div className="public-preview-cards">
+              <div><b ref={r1} className="tabnum">{v1}</b><span>Surat Masuk</span></div>
+              <div><b ref={r2} className="tabnum">{v2}</b><span>Surat Keluar</span></div>
+              <div><b ref={r3} className="tabnum">{v3}</b><span>IKM</span></div>
+            </div>
+            <div className="public-preview-list">
+              {["Pengantar perbaikan data KTP", "Rekomendasi izin kegiatan", "Rekomendasi nikah"].map((item, index) => (
+                <div key={item}>
+                  <span className="tabnum">0{index + 1}</span>
+                  <p>{item}</p>
+                  <em>{index === 0 ? "Baru" : "Diproses"}</em>
+                </div>
+              ))}
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PublicAboutSection() {
+  return (
+    <section className="public-section" id="tentang">
+      <SectionIntro
+        eyebrow="DESKRIPSI SINGKAT APLIKASI"
+        title={`Tentang ${APP_INFO.nama}`}
+        desc={APP_INFO.kepanjangan}
+      />
+      <div className="public-about-modern">
+        <aside className="public-about-panel">
+          <div className="public-about-panel-top">
+            <span className="public-about-logo"><img src={LOGO_SRC} alt="" /></span>
+            <span className="public-about-kicker">Kecamatan Air Hitam</span>
+          </div>
+          <h3>Transformasi layanan publik dalam satu kanal digital.</h3>
+          <p>{APP_INFO.tagline}</p>
+          <div className="public-about-metrics">
+            <span><b>6</b> Jenis layanan</span>
+            <span><b>SPBE</b> Selaras digital</span>
+            <span><b>IKM</b> Terukur berkala</span>
+          </div>
+        </aside>
+
+        <div className="public-about-content">
+          <article className="public-story-card">
+            <span className="public-story-index tabnum">01</span>
+            <div>
+              <h3>Latar Belakang</h3>
+              <p>{APP_INFO.latar}</p>
+            </div>
+          </article>
+          <article className="public-story-card">
+            <span className="public-story-index tabnum">02</span>
+            <div>
+              <h3>Konsep Inovasi</h3>
+              <p>{APP_INFO.konsep}</p>
+            </div>
+          </article>
+          <article className="public-principle-panel">
+            <div>
+              <span className="public-story-index tabnum">03</span>
+              <h3>Prinsip Layanan</h3>
+            </div>
+            <div className="public-principle-list">
+              {["Cepat", "Responsif", "Dinamis", "Akuntabel", "Sistematis"].map((item) => (
+                <span key={item}>{item}</span>
+              ))}
+            </div>
+          </article>
+        </div>
+      </div>
+      <div className="public-purpose-shell">
+        <div className="public-purpose-head">
+          <div className="public-eyebrow">TUJUAN APLIKASI</div>
+          <h3>Target perubahan pelayanan publik</h3>
+        </div>
+        <div className="public-purpose-list">
+          {APP_INFO.tujuan.map((item, index) => (
+            <div key={item} className="public-purpose-item">
+              <span className="tabnum">{String(index + 1).padStart(2, "0")}</span>
+              <p>{item}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PublicLegalSection() {
+  return (
+    <section className="public-section public-section-muted" id="dasar-hukum">
+      <SectionIntro
+        eyebrow="DASAR HUKUM"
+        title="Landasan penyelenggaraan inovasi"
+        desc="Mengacu pada aturan pelayanan publik, inovasi daerah, SPBE, dan perangkat daerah."
+      />
+      <div className="public-legal-layout">
+        <aside className="public-legal-feature">
+          <span className="tabnum">7</span>
+          <h3>Regulasi utama</h3>
+          <p>Pelayanan publik, pemerintahan daerah, inovasi daerah, SPBE, dan pembentukan Kecamatan Air Hitam.</p>
+        </aside>
+        <div className="public-legal-accordion">
+          {APP_INFO.dasarHukum.map((item, index) => (
+            <details key={item} className="public-legal-detail" open={index === 0}>
+              <summary><span className="tabnum">{String(index + 1).padStart(2, "0")}</span>{item.split(" tentang ")[0]}</summary>
+              <p>{item}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PublicAdministrationSection() {
+  return (
+    <section className="public-section" id="administrasi">
+      <SectionIntro
+        eyebrow="ADMINISTRASI & MEKANISME"
+        title="Alur administrasi yang terdigitalisasi"
+        desc="Alur layanan dibuat jelas dari pengajuan sampai arsip."
+      />
+      <div className="public-flow">
+        {PUBLIC_FLOW.map((item, index) => (
+          <article key={item.title} className="public-flow-step">
+            <span className="tabnum">{String(index + 1).padStart(2, "0")}</span>
+            <h3>{item.title}</h3>
+            <p>{item.desc}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function PublicLanding({ onLogin, focusSection, onFocusHandled }) {
   const regionName = OFFICE.pemda.replace(/^Pemerintah\s+/i, "");
+  const [navOpen, setNavOpen] = useState(false);
+  const rootRef = useRef(null);
 
   function jumpTo(id) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setNavOpen(false);
   }
 
   useEffect(() => {
@@ -271,24 +477,136 @@ function PublicLanding({ onLogin, focusSection, onFocusHandled }) {
     });
   }, [focusSection, onFocusHandled]);
 
+  /* Scroll-reveal with stagger — respects reduced-motion */
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const groups = [
+      ".public-section-intro",
+      ".public-about-panel", ".public-story-card", ".public-principle-panel",
+      ".public-purpose-shell",
+      ".public-legal-feature", ".public-legal-detail",
+      ".public-flow-step",
+      ".public-service-card",
+      ".public-impact-step",
+      ".public-panel",
+      ".public-footer-grid > *",
+    ];
+    const seen = new Set();
+    const els = [];
+    groups.forEach((sel) => {
+      root.querySelectorAll(sel).forEach((el) => {
+        if (seen.has(el)) return;
+        seen.add(el);
+        el.classList.add("reveal");
+        els.push(el);
+      });
+    });
+    // stagger index within each parent row
+    els.forEach((el) => {
+      const sibs = Array.from(el.parentElement ? el.parentElement.children : [el]).filter((c) => c.classList.contains("reveal"));
+      el.style.setProperty("--rev-i", String(sibs.indexOf(el) % 6));
+    });
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add("is-visible");
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: "0px 0px -7% 0px" });
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+
+  /* Interactive hero — cursor spotlight, 3D preview tilt, scroll parallax */
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const hero = root.querySelector(".public-hero");
+    const win = root.querySelector(".public-app-preview .public-preview-window");
+    if (!hero) return;
+
+    let raf = 0;
+    let mx = 50, my = 40;
+    const onMove = (e) => {
+      const r = hero.getBoundingClientRect();
+      mx = ((e.clientX - r.left) / r.width) * 100;
+      my = ((e.clientY - r.top) / r.height) * 100;
+      if (!raf) raf = requestAnimationFrame(apply);
+    };
+    const apply = () => {
+      raf = 0;
+      hero.style.setProperty("--mx", mx.toFixed(2) + "%");
+      hero.style.setProperty("--my", my.toFixed(2) + "%");
+      if (win) {
+        const rx = ((50 - my) / 50) * 5;
+        const ry = ((mx - 50) / 50) * 7;
+        win.style.setProperty("--rx", rx.toFixed(2) + "deg");
+        win.style.setProperty("--ry", ry.toFixed(2) + "deg");
+      }
+    };
+    const onLeave = () => {
+      if (win) { win.style.setProperty("--rx", "0deg"); win.style.setProperty("--ry", "0deg"); }
+    };
+    hero.addEventListener("mousemove", onMove);
+    hero.addEventListener("mouseleave", onLeave);
+
+    let sraf = 0;
+    const onScroll = () => {
+      if (sraf) return;
+      sraf = requestAnimationFrame(() => {
+        sraf = 0;
+        const y = window.scrollY || 0;
+        hero.style.setProperty("--sy", y + "px");
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      hero.removeEventListener("mousemove", onMove);
+      hero.removeEventListener("mouseleave", onLeave);
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+      cancelAnimationFrame(sraf);
+    };
+  }, []);
+
   return (
-    <div className="public-site">
+    <div className="public-site" ref={rootRef}>
       <section className="public-hero" id="top">
+        <PublicHeroBackground />
+        <div className="public-hero-grain" aria-hidden="true"></div>
         <header className="public-nav-shell">
           <div className="public-nav">
-            <a href="#top" className="public-brand">
-              <span className="public-brand-mark">PM</span>
+            <a href="#top" className="public-brand" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); setNavOpen(false); }}>
+              <span className="public-brand-mark"><img src={LOGO_SRC} alt="" /></span>
               <span>
-                <strong>e-Persuratan</strong>
+                <strong>{APP_INFO.nama}</strong>
                 <small>{regionName}</small>
               </span>
             </a>
-            <nav className="public-nav-links">
+            <button
+              type="button"
+              className="public-hamburger"
+              aria-label={navOpen ? "Tutup menu" : "Buka menu"}
+              aria-expanded={navOpen}
+              onClick={() => setNavOpen((v) => !v)}
+            >
+              <Icon name={navOpen ? "close" : "menu"} size={20} />
+            </button>
+            <nav className={"public-nav-links" + (navOpen ? " nav-open" : "")}>
+              <a href="#tentang" onClick={(e) => { e.preventDefault(); jumpTo("tentang"); }}>Tentang</a>
+              <a href="#dasar-hukum" onClick={(e) => { e.preventDefault(); jumpTo("dasar-hukum"); }}>Dasar Hukum</a>
+              <a href="#administrasi" onClick={(e) => { e.preventDefault(); jumpTo("administrasi"); }}>Administrasi</a>
               <a href="#layanan" onClick={(e) => { e.preventDefault(); jumpTo("layanan"); }}>Layanan</a>
               <a href="#dampak" onClick={(e) => { e.preventDefault(); jumpTo("dampak"); }}>Dampak</a>
               <a href="#pengaduan" onClick={(e) => { e.preventDefault(); jumpTo("pengaduan"); }}>Pengaduan</a>
-              <a href="#survei-ikm" onClick={(e) => { e.preventDefault(); jumpTo("survei-ikm"); }}>Survei IKM</a>
-              <button type="button" className="public-top-login" onClick={onLogin}>
+              <button type="button" className="public-top-login" onClick={() => { setNavOpen(false); onLogin(); }}>
                 Masuk Petugas <Icon name="chevright" size={14} />
               </button>
             </nav>
@@ -296,40 +614,38 @@ function PublicLanding({ onLogin, focusSection, onFocusHandled }) {
         </header>
 
         <div className="public-hero-inner">
-          <div className="public-hero-copy">
-            <div className="public-pill"><span></span>INOVASI PELAYANAN PUBLIK · IGA 2026</div>
-            <h1 className="public-hero-title">
-              <span>Persuratan Digital</span>
-              <span>yang <em className="gold">Cepat,</em></span>
-              <span><em className="gold gold-soft">Transparan &amp;</em></span>
-              <span><em className="mint">Partisipatif.</em></span>
-            </h1>
-            <p className="public-hero-desc">
-              Satu platform e-Persuratan terpadu yang menyatukan pencatatan surat, disposisi,
-              pengaduan masyarakat, dan pengukuran kepuasan layanan — dengan notifikasi WhatsApp
-              otomatis pada setiap proses penting.
-            </p>
-            <div className="public-hero-actions">
-              <button type="button" className="public-cta public-cta-gold" onClick={() => jumpTo("pengaduan")}>
-                <Icon name="mail" size={15} /> Sampaikan Pengaduan
-              </button>
-              <button type="button" className="public-cta public-cta-ghost" onClick={onLogin}>
-                <Icon name="lock" size={15} /> Login Petugas
-              </button>
+          <div className="public-hero-showcase">
+            <div className="public-hero-copy">
+              <div className="public-pill"><span></span>INOVASI PELAYANAN PUBLIK · IGA 2026</div>
+              <h1 className="public-hero-title">
+                <span>{APP_INFO.nama}</span>
+                <span><em className="gold">Portal Layanan Digital</em></span>
+                <span><em className="mint">Kecamatan Air Hitam.</em></span>
+              </h1>
+              <p className="public-hero-desc">
+                Akses informasi layanan, pengaduan, dan survei kepuasan dalam satu kanal.
+                Petugas juga dapat mengelola surat dan arsip dengan lebih tertib.
+              </p>
+              <div className="public-hero-actions">
+                <button type="button" className="public-cta public-cta-gold" onClick={() => jumpTo("pengaduan")}>
+                  <Icon name="mail" size={15} /> Sampaikan Pengaduan
+                </button>
+                <button type="button" className="public-cta public-cta-ghost" onClick={onLogin}>
+                  <Icon name="lock" size={15} /> Masuk Petugas
+                </button>
+              </div>
             </div>
-            <div className="public-chip-row">
-              <span className="public-chip"><span className="blue"></span>12 Modul Terpadu</span>
-              <span className="public-chip"><span className="gold"></span>3 Peran Pengguna</span>
-              <span className="public-chip"><span className="green"></span>Tanpa Login untuk Publik</span>
-            </div>
+            <PublicAppPreview />
           </div>
 
           <div className="public-stat-row">
             {PUBLIC_STATS.map((stat) => (
               <article key={stat.label} className="public-stat-card">
-                <div className="public-stat-glow"></div>
-                <div className="public-stat-value tabnum">{stat.value}</div>
-                <p>{stat.label}</p>
+                <span className="public-stat-icon"><Icon name={stat.icon} size={17} /></span>
+                <div>
+                  <div className="public-stat-value tabnum">{stat.value}</div>
+                  <p>{stat.label}</p>
+                </div>
               </article>
             ))}
           </div>
@@ -337,11 +653,15 @@ function PublicLanding({ onLogin, focusSection, onFocusHandled }) {
       </section>
 
       <div className="public-surface">
+        <PublicAboutSection />
+        <PublicLegalSection />
+        <PublicAdministrationSection />
+
         <section className="public-section" id="layanan">
           <SectionIntro
             eyebrow="RUANG LINGKUP LAYANAN"
-            title="Satu pintu untuk tata kelola & layanan publik"
-            desc="Layanan internal aparatur dan layanan publik masyarakat dipersatukan dalam alur yang sama — saling terhubung, terdokumentasi, dan terukur."
+            title="Jenis layanan DILAN CERDAS"
+            desc="Layanan surat pengantar dan rekomendasi di Kecamatan Air Hitam."
           />
           <div className="public-service-grid">
             {PUBLIC_SERVICES.map((service) => (
@@ -364,28 +684,43 @@ function PublicLanding({ onLogin, focusSection, onFocusHandled }) {
         <section className="public-section public-section-muted" id="dampak">
           <SectionIntro
             eyebrow="DAMPAK & MANFAAT"
-            title="Sebelum vs Sesudah penerapan"
-            desc="Perubahan yang dapat dibuktikan dengan angka — inti dari penilaian inovasi pemerintahan."
+            title="Sebelum vs sesudah penerapan"
+            desc="Perbandingan singkat sebelum dan setelah layanan dibuat digital."
           />
-          <div className="public-impact-shell">
-            <table className="public-impact-table">
-              <thead>
-                <tr>
-                  <th>Aspek</th>
-                  <th>Sebelum (Manual)</th>
-                  <th>Sesudah (Sistem)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {PUBLIC_IMPACT.map((row) => (
-                  <tr key={row.aspect}>
-                    <td>{row.aspect}</td>
-                    <td className="before">{row.before}</td>
-                    <td className="after">{row.after} <span className="public-inline-arrow">↗</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="public-impact-board">
+            <aside className="public-impact-summary">
+              <span className="public-impact-summary-kicker">Transformasi layanan</span>
+              <h3>Dari proses manual menjadi layanan yang lebih terbuka.</h3>
+              <p>Setiap aspek dibuat lebih mudah dipantau, lebih cepat diproses, dan lebih rapi untuk kebutuhan arsip kecamatan.</p>
+              <div className="public-impact-summary-points" aria-hidden="true">
+                <span>Manual</span>
+                <i></i>
+                <span>Digital</span>
+              </div>
+            </aside>
+            <div className="public-impact-timeline">
+              {PUBLIC_IMPACT.map((row, index) => (
+                <article key={row.aspect} className="public-impact-step">
+                  <div className="public-impact-aspect">
+                    <span className="public-impact-index tabnum">{String(index + 1).padStart(2, "0")}</span>
+                    <h3>{row.aspect}</h3>
+                  </div>
+                  <div className="public-impact-compare">
+                    <div className="public-impact-state before">
+                      <span>Sebelum</span>
+                      <p>{row.before}</p>
+                    </div>
+                    <div className="public-impact-arrow" aria-hidden="true">
+                      <Icon name="chevright" size={15} />
+                    </div>
+                    <div className="public-impact-state after">
+                      <span>Sesudah</span>
+                      <p>{row.after}</p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -393,7 +728,7 @@ function PublicLanding({ onLogin, focusSection, onFocusHandled }) {
           <SectionIntro
             eyebrow="PARTISIPASI MASYARAKAT"
             title="Sampaikan suara Anda"
-            desc="Tanpa perlu membuat akun. Pengaduan langsung masuk ke dashboard petugas, dan kepuasan Anda kami ukur secara berkala."
+            desc="Pengaduan dan survei bisa diisi tanpa akun."
           />
           <div className="public-participation-grid">
             <PublicComplaintCard />
@@ -405,15 +740,14 @@ function PublicLanding({ onLogin, focusSection, onFocusHandled }) {
           <div className="public-footer-grid">
             <div>
               <div className="public-brand public-footer-brand">
-                <span className="public-brand-mark">PM</span>
+                <span className="public-brand-mark"><img src={LOGO_SRC} alt="" /></span>
                 <span>
-                  <strong>e-Persuratan</strong>
+                  <strong>{APP_INFO.nama}</strong>
                   <small>{regionName}</small>
                 </span>
               </div>
               <p className="public-footer-copy">
-                Sistem Surat Masuk & Surat Keluar terpadu — mendukung Sistem Pemerintahan
-                Berbasis Elektronik (SPBE) dan reformasi birokrasi.
+                {APP_INFO.tagline} Dibuat untuk layanan yang lebih rapi, cepat, dan mudah dipantau.
               </p>
             </div>
             <div>
@@ -422,21 +756,21 @@ function PublicLanding({ onLogin, focusSection, onFocusHandled }) {
                 <a href="#pengaduan" onClick={(e) => { e.preventDefault(); jumpTo("pengaduan"); }}>Pengaduan Masyarakat</a>
                 <a href="#survei-ikm" onClick={(e) => { e.preventDefault(); jumpTo("survei-ikm"); }}>Survei Kepuasan</a>
                 <a href="#layanan" onClick={(e) => { e.preventDefault(); jumpTo("layanan"); }}>Informasi Layanan</a>
-                <button type="button" className="public-footer-login" onClick={onLogin}>Login Petugas</button>
+                <button type="button" className="public-footer-login" onClick={onLogin}>Masuk Petugas</button>
               </div>
             </div>
             <div>
               <h4>Kontak</h4>
               <div className="public-footer-meta">
-                <span>Jl. Inovasi No. [--], {regionName}</span>
-                <span>(0xx) xxx-xxxx</span>
-                <span>persuratan@prajamandala.go.id</span>
-                <span>Senin–Jumat · 08.00–16.00</span>
+                <span>{OFFICE.alamat}</span>
+                <span>{OFFICE.email}</span>
+                <span>{OFFICE.jam}</span>
+                <span>{OFFICE.berdiri}</span>
               </div>
             </div>
           </div>
           <div className="public-footer-bottom">
-            <span>© 2026 {OFFICE.pemda} (contoh). Seluruh data placeholder — sesuaikan sebelum diajukan.</span>
+            <span>© 2026 {OFFICE.nama}, {OFFICE.pemda}.</span>
             <span>Dikembangkan oleh <b>Inovtek Cipta Digital</b></span>
           </div>
         </footer>
@@ -447,14 +781,14 @@ function PublicLanding({ onLogin, focusSection, onFocusHandled }) {
 
 /* ---------- Sidebar ---------- */
 function Sidebar({ role, screen, go, open, onClose }) {
-  const me = { "User": "Andi Saputra", "Admin": "Ir. Retno Kusumawati", "Super Admin": "Drs. H. Bambang Wijaya" }[role];
+  const me = { "User": "SITI AJRAH", "Admin": "ZULKARNAIN, S.E.", "Super Admin": "FATHURRAHMAN, S.STP" }[role];
   return (
     <>
       {open && <div className="scrim" onClick={onClose}></div>}
       <aside className={"sidebar " + (open ? "open" : "")}>
         <div className="brand">
-          <div className="emblem"><Icon name="mail" size={22} style={{ color: "#fff" }} /></div>
-          <div className="col"><span className="bt">SISTEM SURAT</span><span className="bs">e-Persuratan Terpadu</span></div>
+          <div className="emblem"><img src={LOGO_SRC} alt="" /></div>
+          <div className="col"><span className="bt">{APP_INFO.nama}</span><span className="bs">Kecamatan Air Hitam</span></div>
         </div>
         <nav className="nav">
           {NAV.map(grp => {
@@ -519,7 +853,27 @@ function App() {
     }
   }, [t.accent]);
 
+  useEffect(() => {
+    function handlePopState() {
+      if (window.location.hash === "#login" && !role) {
+        setView("login");
+        return;
+      }
+      if (!role) {
+        setView("landing");
+        setLandingSection(null);
+        setSideOpen(false);
+      }
+    }
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [role]);
+
   function openLanding(section = null) {
+    if (window.location.hash === "#login") {
+      window.history.replaceState({ view: "landing" }, "", window.location.pathname + window.location.search);
+    }
     setView("landing");
     setLandingSection(section);
     setSideOpen(false);
@@ -527,6 +881,9 @@ function App() {
   }
 
   function openLogin() {
+    if (window.location.hash !== "#login") {
+      window.history.pushState({ view: "login" }, "", "#login");
+    }
     setView("login");
     setLandingSection(null);
     setSideOpen(false);
@@ -570,7 +927,7 @@ function App() {
 
   const allowed = NAV.flatMap(g => g.items).find(it => it.id === screen && it.roles.includes(role));
   const activeScreen = allowed ? screen : "dashboard";
-  const titleMap = { Admin: "Ir. Retno Kusumawati", User: "Andi Saputra", "Super Admin": "Drs. H. Bambang Wijaya" };
+  const titleMap = { Admin: "ZULKARNAIN, S.E.", User: "SITI AJRAH", "Super Admin": "FATHURRAHMAN, S.STP" };
 
   return (
     <div className="app">

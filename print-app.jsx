@@ -4,6 +4,7 @@
 
 const PRINT_ORDER = [
   { id: "dashboard", label: "Dashboard", group: "Utama" },
+  { id: "tentang-aplikasi", label: "Tentang Aplikasi", group: "Utama" },
   { id: "rekap-masuk", label: "Rekap Surat Masuk", group: "Persuratan" },
   { id: "rekap-keluar", label: "Rekap Surat Keluar", group: "Persuratan" },
   { id: "form-masuk", label: "Surat Masuk / Permohonan", group: "Persuratan" },
@@ -22,10 +23,10 @@ function PrintHeader() {
   return (
     <div className="print-cover">
       <div className="row gap-3 center">
-        <div className="emblem" style={{ width: 56, height: 56 }}><Icon name="mail" size={28} style={{ color: "#fff" }} /></div>
+        <div className="emblem" style={{ width: 56, height: 56, overflow: "hidden" }}><img src="assets/sarolangun-logo.jpeg" alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
         <div>
-          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.01em", color: "#fff" }}>SISTEM SURAT</div>
-          <div style={{ fontSize: 13, color: "oklch(0.78 0.02 256)" }}>Aplikasi Surat Masuk & Surat Keluar — e-Persuratan Terpadu</div>
+          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.01em", color: "#fff" }}>{APP_INFO.nama}</div>
+          <div style={{ fontSize: 13, color: "oklch(0.78 0.02 256)" }}>{APP_INFO.kepanjangan}</div>
         </div>
       </div>
       <div className="print-cover-foot">
