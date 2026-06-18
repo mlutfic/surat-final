@@ -10,7 +10,7 @@ function FormShell({ crumb, title, sub, back, go, children, side }) {
         title={title}
         sub={sub}
         actions={
-          <button className="btn btn-ghost" onClick={() => go(back)}>
+          <button type="button" className="btn btn-ghost" onClick={() => { AppApi.clearFormContext(); go(back); }}>
             <Icon name="arrowleft" size={15} />Kembali
           </button>
         }
@@ -23,45 +23,165 @@ function FormShell({ crumb, title, sub, back, go, children, side }) {
   );
 }
 
-function FormActions() {
+function FormActions({ onSubmit, onSaveDraft, onPrint, onDelete, busy, canDelete }) {
   return (
     <div className="row gap-2 wrap" style={{ marginTop: 26, paddingTop: 20, borderTop: "1px solid var(--line)" }}>
-      <button className="btn btn-primary"><Icon name="send" size={15} />Kirim</button>
-      <button className="btn btn-ghost"><Icon name="doc" size={15} />Simpan Draft</button>
-      <button className="btn btn-ghost"><Icon name="print" size={15} />Cetak</button>
+      <button type="button" className="btn btn-primary" disabled={busy} onClick={onSubmit}><Icon name="send" size={15} />{busy ? "Menyimpan..." : "Kirim"}</button>
+      <button type="button" className="btn btn-ghost" disabled={busy} onClick={onSaveDraft}><Icon name="doc" size={15} />Simpan Draft</button>
+      <button type="button" className="btn btn-ghost" disabled={busy} onClick={onPrint}><Icon name="print" size={15} />Cetak</button>
       <div className="grow" />
-      <button className="btn btn-ghost" style={{ color: "var(--hot)" }}>
-        <Icon name="trash" size={15} />Hapus
-      </button>
+      {canDelete && (
+        <button type="button" className="btn btn-ghost" style={{ color: "var(--hot)" }} disabled={busy} onClick={onDelete}>
+          <Icon name="trash" size={15} />Hapus
+        </button>
+      )}
     </div>
   );
 }
 
 const grid2 = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 };
 
+function createIncomingForm(session, office) {
+  return {
+    id: "",
+    agenda_no: "",
+    service_type_id: "",
+    letter_no: "",
+    source_name: session?.role === "User" ? session.unit_name : "",
+    target_unit: office?.internal_units?.[0] || "",
+    letter_date: formatDateInput(new Date()),
+    priority: "Penting",
+    status: "Baru",
+    sender_phone: "",
+    subject: "",
+    notes: "",
+    notify_whatsapp: true,
+    file_object: null,
+    file_name: "",
+    remove_existing_file: false,
+  };
+}
+
+function createOutgoingForm(session, office) {
+  return {
+    id: "",
+    agenda_no: "",
+    letter_no: "",
+    source_unit: session?.role === "User" ? session.unit_name : (office?.internal_units?.[0] || ""),
+    destination_name: "",
+    archive_classification: "",
+    letter_date: formatDateInput(new Date()),
+    priority: "Penting",
+    status: "Terkirim",
+    subject: "",
+    notes: "",
+    notify_whatsapp: true,
+    file_object: null,
+    file_name: "",
+    remove_existing_file: false,
+  };
+}
+
+function incomingRecordToForm(record) {
+  return {
+    id: record.id,
+    agenda_no: record.agenda_no || "",
+    service_type_id: record.service_type_id || "",
+    letter_no: record.letter_no || "",
+    source_name: record.source_name || "",
+    target_unit: record.target_unit || "",
+    letter_date: formatDateInput(record.letter_date),
+    priority: record.priority || "Penting",
+    status: record.status || "Baru",
+    sender_phone: record.sender_phone || "",
+    subject: record.subject || "",
+    notes: record.notes || "",
+    notify_whatsapp: Boolean(record.notify_whatsapp),
+    file_object: null,
+    file_name: record.file_name || "",
+    remove_existing_file: false,
+  };
+}
+
+function outgoingRecordToForm(record) {
+  return {
+    id: record.id,
+    agenda_no: record.agenda_no || "",
+    letter_no: record.letter_no || "",
+    source_unit: record.source_unit || "",
+    destination_name: record.destination_name || "",
+    archive_classification: record.archive_classification || "",
+    letter_date: formatDateInput(record.letter_date),
+    priority: record.priority || "Penting",
+    status: record.status || "Terkirim",
+    subject: record.subject || "",
+    notes: record.notes || "",
+    notify_whatsapp: Boolean(record.notify_whatsapp),
+    file_object: null,
+    file_name: record.file_name || "",
+    remove_existing_file: false,
+  };
+}
+
 function FormSuratMasuk({ go }) {
+  const state = useAppState();
+  const session = state.session;
+  const office = AppSelectors.office();
+  const services = AppSelectors.serviceTypes();
+  const allIncoming = AppSelectors.incomingLetters();
+  const context = state.formContext;
+  const editingRecord = context?.kind === "incoming" ? AppApi.letterRecord("incoming", context.recordId) : null;
+  const [form, setForm] = useState(() => createIncomingForm(session, office));
+  const [busy, setBusy] = useState(false);
+  const isVillageUser = session?.role === "User";
+
+  useEffect(() => {
+    if (!office) return;
+    if (editingRecord) setForm(incomingRecordToForm(editingRecord));
+    else setForm(createIncomingForm(session, office));
+  }, [editingRecord, office, session?.id]);
+
+  if (!office) return <LoadingBlock label="Memuat form surat masuk..." />;
+
+  function patch(next) {
+    setForm((value) => ({ ...value, ...next }));
+  }
+
+  async function submitWithStatus(status) {
+    setBusy(true);
+    try {
+      await AppApi.saveIncomingLetter({ ...form, status });
+      go("rekap-masuk");
+    } catch (error) {
+      AppApi.setNotice(error.message || "Gagal menyimpan surat masuk.", "danger");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <FormShell
-      go={go} back="rekap-masuk"
-      crumb={["Persuratan", "Surat Masuk", "Form"]}
-      title="Surat Permohonan / Surat Masuk"
+      go={go}
+      back="rekap-masuk"
+      crumb={["Persuratan", "Surat Masuk", editingRecord ? "Edit" : "Form"]}
+      title={editingRecord ? "Edit Surat Masuk" : "Surat Permohonan / Surat Masuk"}
       sub="Catat surat masuk beserta lampiran dan disposisinya"
       side={
         <>
           <WaPreview lines={[
-            <b key="t">📩 Surat Masuk Baru</b>,
-            <span key="1">No. Agenda: <b>SM-2026-0149</b></span>,
-            <span key="2">Perihal: Undangan Rapat Koordinasi</span>,
-            <span key="3">Sifat: <b>Penting</b> · 31 Mei 2026</span>,
-            <span key="4">WA resmi dokumen: <b>{OFFICE.waNotifikasiDokumen}</b></span>,
-            <span key="5" style={{ color: "var(--muted)" }}>Diteruskan ke disposisi Camat Air Hitam.</span>,
+            <b key="title">📩 Surat Masuk</b>,
+            <span key="agenda">No. Agenda: <b>{form.agenda_no || "Otomatis saat disimpan"}</b></span>,
+            <span key="subject">Perihal: {form.subject || "-"}</span>,
+            <span key="meta">Sifat: <b>{form.priority}</b> · {formatDateId(form.letter_date)}</span>,
+            <span key="wa">WA resmi dokumen: <b>{office.whatsapp_notification}</b></span>,
+            <span key="dest" style={{ color: "var(--muted)" }}>Disposisi tujuan: {form.target_unit || "-"}</span>,
           ]} />
           <div className="card card-pad">
             <div className="eyebrow" style={{ marginBottom: 12 }}>Petunjuk Pengisian</div>
             <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.85 }}>
-              <li>Isi sesuai dokumen surat asli yang diterima.</li>
-              <li>Nomor agenda dibuat otomatis oleh sistem.</li>
-              <li>Notifikasi WhatsApp dokumen masuk dikirim ke nomor resmi kecamatan {OFFICE.waNotifikasiDokumen}.</li>
+              <li>Nomor agenda surat masuk dibuat otomatis oleh database saat data pertama kali disimpan.</li>
+              <li>Operator desa hanya dapat mencatat surat dari unit desanya sendiri agar alur lebih konsisten.</li>
+              <li>Unduh dan cetak akan aktif penuh setelah surat tersimpan.</li>
             </ul>
           </div>
         </>
@@ -69,74 +189,137 @@ function FormSuratMasuk({ go }) {
     >
       <div className="eyebrow" style={{ marginBottom: 18 }}>Detail Surat</div>
       <div style={grid2}>
+        <Field label="Nomor Agenda">
+          <input className="input tabnum" value={form.agenda_no || "Otomatis saat disimpan"} readOnly />
+        </Field>
         <Field label="Jenis Layanan" req>
-          <select className="select" defaultValue="Surat Pengantar Perbaikan Data KTP">
-            {JENIS_LAYANAN.map(j => <option key={j}>{j}</option>)}
+          <select className="select" value={form.service_type_id} onChange={(event) => patch({ service_type_id: event.target.value })}>
+            <option value="">Pilih layanan</option>
+            {services.map((service) => <option key={service.id} value={service.id}>{service.name}</option>)}
           </select>
         </Field>
         <Field label="Nomor Surat" req>
-          <input className="input tabnum" defaultValue="470/148/KEC-AH/VI/2026" />
+          <input className="input tabnum" value={form.letter_no} onChange={(event) => patch({ letter_no: event.target.value })} />
         </Field>
         <Field label="Asal Surat" req>
-          <input className="input" defaultValue="Desa Jernih" placeholder="Instansi / pengirim" />
+          <input className="input" value={form.source_name} onChange={(event) => patch({ source_name: event.target.value })} disabled={isVillageUser} placeholder="Instansi / pengirim" />
         </Field>
         <Field label="Tujuan Surat" req>
-          <select className="select" defaultValue="Kasi Pelayanan Umum">
-            <option>Camat Air Hitam</option>
-            <option>Sekretariat Kecamatan</option>
-            <option>Kasi Pelayanan Umum</option>
-            <option>Kasi Pemerintahan</option>
-            <option>Kasi PMD dan Kelurahan</option>
-            <option>Kasi Kesejahteraan Sosial</option>
-            <option>Kasi Trantib</option>
+          <select className="select" value={form.target_unit} onChange={(event) => patch({ target_unit: event.target.value })}>
+            {office.internal_units.map((unit) => <option key={unit}>{unit}</option>)}
           </select>
         </Field>
         <Field label="Tanggal Surat" req>
-          <input className="input tabnum" type="date" defaultValue="2026-05-31" />
+          <input className="input tabnum" type="date" value={form.letter_date} onChange={(event) => patch({ letter_date: event.target.value })} />
         </Field>
         <Field label="Sifat Surat" req>
-          <select className="select" defaultValue="Penting">
-            <option>Biasa</option><option>Penting</option><option>Segera</option><option>Rahasia</option>
+          <select className="select" value={form.priority} onChange={(event) => patch({ priority: event.target.value })}>
+            {PRIORITY_OPTIONS.map((item) => <option key={item}>{item}</option>)}
           </select>
         </Field>
-        <Field label="Perihal Surat" req full>
-          <textarea className="textarea" defaultValue="Permohonan surat pengantar perbaikan data KTP warga Desa Jernih" />
+        <Field label="Status Surat" req>
+          <select className="select" value={form.status} onChange={(event) => patch({ status: event.target.value })}>
+            {INCOMING_STATUS_OPTIONS.filter((item) => item !== "Draft").map((item) => <option key={item}>{item}</option>)}
+          </select>
         </Field>
-        <Field label="Dokumen Surat" req full hint="Lampirkan hasil pindai surat asli (PDF / JPG / PNG, maks. 5 MB).">
-          <Dropzone file="und-rakor-bkd.pdf" />
+        <Field label="Nomor WhatsApp Pengirim">
+          <input className="input tabnum" value={form.sender_phone} onChange={(event) => patch({ sender_phone: event.target.value })} placeholder="08xx-xxxx-xxxx" />
+        </Field>
+        <Field label="Perihal Surat" req full>
+          <textarea className="textarea" value={form.subject} onChange={(event) => patch({ subject: event.target.value })} />
+        </Field>
+        <Field label="Catatan Internal" full>
+          <textarea className="textarea" value={form.notes} onChange={(event) => patch({ notes: event.target.value })} placeholder="Catatan verifikasi, disposisi, atau tindak lanjut." />
+        </Field>
+        <Field label="Dokumen Surat" full hint="Lampirkan PDF / JPG / PNG. File akan tersimpan di Supabase database.">
+          <Dropzone
+            file={form.file_object || form.file_name}
+            onFileChange={(file) => patch({ file_object: file, file_name: file.name, remove_existing_file: false })}
+            onRemove={() => patch({ file_object: null, file_name: "", remove_existing_file: true })}
+          />
         </Field>
       </div>
       <WaBanner
         label="Kirim notifikasi WhatsApp"
-        hint={`Ringkasan surat masuk dikirim otomatis ke ${OFFICE.waNotifikasiDokumen}.`}
-        on={true}
+        hint={`Ringkasan surat masuk dikirim ke ${office.whatsapp_notification}.`}
+        on={form.notify_whatsapp}
+        onChange={(value) => patch({ notify_whatsapp: value })}
       />
-      <FormActions />
+      <FormActions
+        busy={busy}
+        canDelete={Boolean(form.id)}
+        onSubmit={() => submitWithStatus(form.status || "Baru")}
+        onSaveDraft={() => submitWithStatus("Draft")}
+        onPrint={() => {
+          if (form.id) AppApi.printLetter("incoming", form.id);
+          else AppApi.setNotice("Simpan surat masuk terlebih dahulu sebelum dicetak.", "warn");
+        }}
+        onDelete={() => {
+          if (form.id && window.confirm(`Hapus surat masuk ${form.agenda_no || form.letter_no}?`)) {
+            setBusy(true);
+            AppApi.deleteIncomingLetter(form.id).then(() => go("rekap-masuk")).finally(() => setBusy(false));
+          }
+        }}
+      />
+      {!allIncoming.length && <div style={{ marginTop: 18 }}><InlineNotice tone="info">Database surat masuk masih kosong. Surat pertama yang Anda simpan akan langsung menjadi sumber data utama rekap dan dashboard.</InlineNotice></div>}
     </FormShell>
   );
 }
 
 function FormSuratKeluar({ go }) {
+  const state = useAppState();
+  const session = state.session;
+  const office = AppSelectors.office();
+  const context = state.formContext;
+  const editingRecord = context?.kind === "outgoing" ? AppApi.letterRecord("outgoing", context.recordId) : null;
+  const [form, setForm] = useState(() => createOutgoingForm(session, office));
+  const [busy, setBusy] = useState(false);
+  const isVillageUser = session?.role === "User";
+
+  useEffect(() => {
+    if (!office) return;
+    if (editingRecord) setForm(outgoingRecordToForm(editingRecord));
+    else setForm(createOutgoingForm(session, office));
+  }, [editingRecord, office, session?.id]);
+
+  if (!office) return <LoadingBlock label="Memuat form surat keluar..." />;
+
+  function patch(next) {
+    setForm((value) => ({ ...value, ...next }));
+  }
+
+  async function submitWithStatus(status) {
+    setBusy(true);
+    try {
+      await AppApi.saveOutgoingLetter({ ...form, status });
+      go("rekap-keluar");
+    } catch (error) {
+      AppApi.setNotice(error.message || "Gagal menyimpan surat keluar.", "danger");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <FormShell
-      go={go} back="rekap-keluar"
-      crumb={["Persuratan", "Surat Keluar", "Form"]}
-      title="Buat Surat Keluar"
+      go={go}
+      back="rekap-keluar"
+      crumb={["Persuratan", "Surat Keluar", editingRecord ? "Edit" : "Form"]}
+      title={editingRecord ? "Edit Surat Keluar" : "Buat Surat Keluar"}
       sub="Susun dan terbitkan surat keluar instansi"
       side={
         <>
           <WaPreview lines={[
-            <b key="t">📤 Surat Keluar Terkirim</b>,
-            <span key="1">No. Agenda: <b>SK-2026-0232</b></span>,
-            <span key="2">Tujuan: Seluruh Desa se-Kecamatan Air Hitam</span>,
-            <span key="3">Sifat: <b>Penting</b> · 31 Mei 2026</span>,
-            <span key="4">WA resmi dokumen: <b>{OFFICE.waNotifikasiDokumen}</b></span>,
+            <b key="title">📤 Surat Keluar</b>,
+            <span key="agenda">No. Agenda: <b>{form.agenda_no || "Otomatis saat disimpan"}</b></span>,
+            <span key="dest">Tujuan: {form.destination_name || "-"}</span>,
+            <span key="meta">Sifat: <b>{form.priority}</b> · {formatDateId(form.letter_date)}</span>,
+            <span key="wa">WA resmi dokumen: <b>{office.whatsapp_notification}</b></span>,
           ]} />
           <div className="card card-pad">
             <div className="eyebrow" style={{ marginBottom: 12 }}>Penomoran Otomatis</div>
             <p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.75, margin: 0 }}>
-              Nomor agenda <b className="tabnum">SK-2026-0232</b> akan ditetapkan saat surat dikirim.
-              Format nomor surat mengikuti tata naskah dinas yang berlaku.
+              Nomor agenda surat keluar akan ditetapkan otomatis oleh database saat surat disimpan pertama kali.
             </p>
           </div>
         </>
@@ -144,50 +327,78 @@ function FormSuratKeluar({ go }) {
     >
       <div className="eyebrow" style={{ marginBottom: 18 }}>Detail Surat</div>
       <div style={grid2}>
+        <Field label="Nomor Agenda">
+          <input className="input tabnum" value={form.agenda_no || "Otomatis saat disimpan"} readOnly />
+        </Field>
         <Field label="Asal Surat (Unit)" req>
-          <select className="select" defaultValue="Kasi Pelayanan Umum">
-            <option>Camat Air Hitam</option>
-            <option>Sekretariat Kecamatan</option>
-            <option>Kasi Pelayanan Umum</option>
-            <option>Kasi Pemerintahan</option>
-            <option>Kasi PMD dan Kelurahan</option>
-            <option>Kasi Kesejahteraan Sosial</option>
-            <option>Kasi Trantib</option>
-          </select>
+          {isVillageUser ? (
+            <input className="input" value={form.source_unit} readOnly />
+          ) : (
+            <select className="select" value={form.source_unit} onChange={(event) => patch({ source_unit: event.target.value })}>
+              {office.internal_units.map((unit) => <option key={unit}>{unit}</option>)}
+            </select>
+          )}
         </Field>
         <Field label="Tujuan Surat" req>
-          <input className="input" defaultValue="Seluruh Desa se-Kecamatan Air Hitam" placeholder="Instansi / penerima" />
+          <input className="input" value={form.destination_name} onChange={(event) => patch({ destination_name: event.target.value })} placeholder="Instansi / penerima" />
         </Field>
         <Field label="Nomor Surat" req>
-          <input className="input tabnum" defaultValue="470/231/KEC-AH/VI/2026" />
+          <input className="input tabnum" value={form.letter_no} onChange={(event) => patch({ letter_no: event.target.value })} />
         </Field>
         <Field label="Tanggal Surat" req>
-          <input className="input tabnum" type="date" defaultValue="2026-05-31" />
+          <input className="input tabnum" type="date" value={form.letter_date} onChange={(event) => patch({ letter_date: event.target.value })} />
         </Field>
         <Field label="Sifat Surat" req>
-          <select className="select" defaultValue="Penting">
-            <option>Biasa</option><option>Penting</option><option>Segera</option><option>Rahasia</option>
+          <select className="select" value={form.priority} onChange={(event) => patch({ priority: event.target.value })}>
+            {PRIORITY_OPTIONS.map((item) => <option key={item}>{item}</option>)}
+          </select>
+        </Field>
+        <Field label="Status Surat" req>
+          <select className="select" value={form.status} onChange={(event) => patch({ status: event.target.value })}>
+            {OUTGOING_STATUS_OPTIONS.map((item) => <option key={item}>{item}</option>)}
           </select>
         </Field>
         <Field label="Klasifikasi Arsip">
-          <input className="input" defaultValue="005 — Undangan" />
+          <input className="input" value={form.archive_classification} onChange={(event) => patch({ archive_classification: event.target.value })} placeholder="Contoh: 005 - Undangan" />
         </Field>
         <Field label="Perihal Surat" req full>
-          <textarea className="textarea" defaultValue="Sosialisasi penggunaan aplikasi DILAN CERDAS untuk layanan administrasi kecamatan" />
+          <textarea className="textarea" value={form.subject} onChange={(event) => patch({ subject: event.target.value })} />
         </Field>
-        <Field label="Dokumen Surat" req full hint="Unggah naskah final yang telah ditandatangani (PDF, maks. 5 MB).">
-          <Dropzone file="edaran-migrasi-surel.pdf" />
+        <Field label="Catatan Internal" full>
+          <textarea className="textarea" value={form.notes} onChange={(event) => patch({ notes: event.target.value })} placeholder="Catatan distribusi, paraf, atau tindak lanjut." />
+        </Field>
+        <Field label="Dokumen Surat" full hint="Unggah naskah final. File akan tersimpan di Supabase database.">
+          <Dropzone
+            file={form.file_object || form.file_name}
+            onFileChange={(file) => patch({ file_object: file, file_name: file.name, remove_existing_file: false })}
+            onRemove={() => patch({ file_object: null, file_name: "", remove_existing_file: true })}
+          />
         </Field>
       </div>
       <WaBanner
         label="Kirim notifikasi WhatsApp"
-        hint={`Pemberitahuan surat terbit diteruskan melalui WA resmi ${OFFICE.waNotifikasiDokumen}.`}
-        on={true}
+        hint={`Pemberitahuan surat terbit diteruskan melalui WA resmi ${office.whatsapp_notification}.`}
+        on={form.notify_whatsapp}
+        onChange={(value) => patch({ notify_whatsapp: value })}
       />
-      <FormActions />
+      <FormActions
+        busy={busy}
+        canDelete={Boolean(form.id)}
+        onSubmit={() => submitWithStatus(form.status || "Terkirim")}
+        onSaveDraft={() => submitWithStatus("Draft")}
+        onPrint={() => {
+          if (form.id) AppApi.printLetter("outgoing", form.id);
+          else AppApi.setNotice("Simpan surat keluar terlebih dahulu sebelum dicetak.", "warn");
+        }}
+        onDelete={() => {
+          if (form.id && window.confirm(`Hapus surat keluar ${form.agenda_no || form.letter_no}?`)) {
+            setBusy(true);
+            AppApi.deleteOutgoingLetter(form.id).then(() => go("rekap-keluar")).finally(() => setBusy(false));
+          }
+        }}
+      />
     </FormShell>
   );
 }
 
-window.FormSuratMasuk = FormSuratMasuk;
-window.FormSuratKeluar = FormSuratKeluar;
+Object.assign(window, { FormSuratMasuk, FormSuratKeluar });

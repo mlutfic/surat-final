@@ -1,5 +1,5 @@
 /* ============================================================
-   SISTEM SURAT — Print renderer (stacks every screen, paged)
+   SISTEM SURAT — Print renderer (database-backed)
    ============================================================ */
 
 const PRINT_ORDER = [
@@ -7,8 +7,6 @@ const PRINT_ORDER = [
   { id: "tentang-aplikasi", label: "Tentang Aplikasi", group: "Utama" },
   { id: "rekap-masuk", label: "Rekap Surat Masuk", group: "Persuratan" },
   { id: "rekap-keluar", label: "Rekap Surat Keluar", group: "Persuratan" },
-  { id: "form-masuk", label: "Surat Masuk / Permohonan", group: "Persuratan" },
-  { id: "form-keluar", label: "Surat Keluar", group: "Persuratan" },
   { id: "profil", label: "Profil Kantor", group: "Profil & SDM" },
   { id: "struktur", label: "Struktur Organisasi", group: "Profil & SDM" },
   { id: "pegawai", label: "Data Kepegawaian", group: "Profil & SDM" },
@@ -20,63 +18,69 @@ const PRINT_ORDER = [
 const noop = () => {};
 
 function PrintHeader() {
+  const office = AppSelectors.office();
   return (
     <div className="print-cover">
       <div className="row gap-3 center">
-        <div className="emblem" style={{ width: 56, height: 56, overflow: "hidden" }}><img src="assets/sarolangun-logo.jpeg" alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
+        <div className="emblem" style={{ width: 56, height: 56, overflow: "hidden" }}><img src={office?.logo_url || "assets/sarolangun-logo.jpeg"} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
         <div>
-          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.01em", color: "#fff" }}>{APP_INFO.nama}</div>
-          <div style={{ fontSize: 13, color: "oklch(0.78 0.02 256)" }}>{APP_INFO.kepanjangan}</div>
+          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.01em", color: "#fff" }}>{office?.app_name || "DILAN CERDAS"}</div>
+          <div style={{ fontSize: 13, color: "oklch(0.78 0.02 256)" }}>{office?.app_expansion || ""}</div>
         </div>
       </div>
       <div className="print-cover-foot">
-        <div>{OFFICE.nama} · {OFFICE.pemda}</div>
-        <div>Dokumentasi Antarmuka · 11 Modul · Per 31 Mei 2026</div>
+        <div>{office?.office_name || ""} · {office?.government_name || ""}</div>
+        <div>Dokumentasi Antarmuka · Data dari Supabase · {formatDateId(new Date())}</div>
       </div>
     </div>
   );
 }
 
-function PrintLoginPage() {
-  return (
-    <section className="print-page">
-      <div className="modbar"><span className="modgroup">Autentikasi</span><span className="modname">Halaman Login</span></div>
-      <div className="login-static">
-        <Login onLogin={noop} />
-      </div>
-    </section>
-  );
-}
-
-function PrintScreenPage({ item }) {
+function PrintScreenPage({ item, role }) {
   return (
     <section className="print-page">
       <div className="modbar"><span className="modgroup">{item.group}</span><span className="modname">{item.label}</span></div>
       <div className="content print-content">
-        {SCREENS[item.id]({ go: noop, role: "Super Admin" })}
+        {SCREENS[item.id]({ go: noop, role })}
       </div>
     </section>
   );
 }
 
 function PrintApp() {
+  const state = useAppState();
+
+  useEffect(() => {
+    AppApi.bootstrap().catch(() => null);
+  }, []);
+
+  useEffect(() => {
+    if (!state.ready || !state.session) return;
+    const fonts = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+    fonts.then(() => setTimeout(() => window.print(), 700));
+  }, [state.ready, state.session?.id]);
+
+  if (!state.ready || state.loading) {
+    return <LoadingBlock label="Menyiapkan dokumen cetak..." />;
+  }
+
+  if (!state.session) {
+    return (
+      <div className="print-root" style={{ padding: 36 }}>
+        <InlineNotice tone="warn">Halaman cetak membutuhkan sesi login aktif. Masuk ke aplikasi terlebih dahulu, lalu buka kembali menu cetak.</InlineNotice>
+      </div>
+    );
+  }
+
   return (
     <div className="print-root">
       <PrintHeader />
-      <PrintLoginPage />
-      {PRINT_ORDER.map(it => <PrintScreenPage key={it.id} item={it} />)}
+      {PRINT_ORDER.filter((item) => {
+        const screen = NAV.flatMap((group) => group.items).find((nav) => nav.id === item.id);
+        return !screen || screen.roles.includes(state.session.role);
+      }).map((item) => <PrintScreenPage key={item.id} item={item} role={state.session.role} />)}
     </div>
   );
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<PrintApp />);
-
-/* auto-print once fonts + render settle */
-(function () {
-  function ready() {
-    const fonts = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
-    fonts.then(() => setTimeout(() => window.print(), 600));
-  }
-  if (document.readyState === "complete") ready();
-  else window.addEventListener("load", ready);
-})();

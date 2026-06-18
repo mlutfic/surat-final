@@ -2,47 +2,92 @@
    Screens: Rekap Surat Masuk & Rekap Surat Keluar
    ============================================================ */
 
-function RekapToolbar({ onAdd, addLabel }) {
-  const [active, setActive] = useState("Semua");
+function RekapToolbar({ addLabel, onAdd, onExport, search, onSearch, activeFilter, onFilterChange, dateLabel }) {
   return (
     <div className="toolbar">
-      <div className="searchbar" style={{ maxWidth: 280, flex: "0 0 auto" }}>
+      <div className="searchbar" style={{ maxWidth: 320, flex: "0 0 auto" }}>
         <Icon name="search" size={16} />
-        <input placeholder="Cari nomor / perihal / asal…" />
+        <input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Cari nomor / perihal / asal / tujuan..." />
       </div>
-      {["Semua", "Biasa", "Penting", "Segera", "Rahasia"].map(f => (
-        <button key={f} className={"chip " + (active === f ? "on" : "")} onClick={() => setActive(f)}>
-          {f}
+      {["Semua", ...PRIORITY_OPTIONS].map((filter) => (
+        <button key={filter} type="button" className={"chip " + (activeFilter === filter ? "on" : "")} onClick={() => onFilterChange(filter)}>
+          {filter}
         </button>
       ))}
-      <button className="chip">
-        <Icon name="calendar" size={14} />Mei 2026
+      <button type="button" className="chip">
+        <Icon name="calendar" size={14} />{dateLabel}
       </button>
       <div className="grow" />
-      <button className="btn btn-ghost btn-sm">
+      <button type="button" className="btn btn-ghost btn-sm" onClick={onExport}>
         <Icon name="download" size={14} />Ekspor
       </button>
-      <button className="btn btn-gold btn-sm" onClick={onAdd}>
+      <button type="button" className="btn btn-gold btn-sm" onClick={onAdd}>
         <Icon name="plus" size={14} />{addLabel}
       </button>
     </div>
   );
 }
 
+function paginateRows(rows, page, perPage) {
+  const totalPages = Math.max(1, Math.ceil(rows.length / perPage));
+  const safePage = Math.min(page, totalPages);
+  return {
+    totalPages,
+    pageRows: rows.slice((safePage - 1) * perPage, safePage * perPage),
+    safePage,
+  };
+}
+
+function filterIncomingRows(rows, query, priority) {
+  const keyword = String(query || "").trim().toLowerCase();
+  return rows.filter((item) => {
+    const matchesPriority = priority === "Semua" || item.priority === priority;
+    const haystack = [item.agenda_no, item.letter_no, item.subject, item.source_name, item.target_unit, item.service_types?.name].join(" ").toLowerCase();
+    const matchesQuery = !keyword || haystack.includes(keyword);
+    return matchesPriority && matchesQuery;
+  });
+}
+
+function filterOutgoingRows(rows, query, priority) {
+  const keyword = String(query || "").trim().toLowerCase();
+  return rows.filter((item) => {
+    const matchesPriority = priority === "Semua" || item.priority === priority;
+    const haystack = [item.agenda_no, item.letter_no, item.subject, item.source_unit, item.destination_name].join(" ").toLowerCase();
+    const matchesQuery = !keyword || haystack.includes(keyword);
+    return matchesPriority && matchesQuery;
+  });
+}
+
 function RekapSuratMasuk({ go }) {
   const [page, setPage] = useState(1);
-  const totalRows = SURAT_MASUK.length;
-  const perPage = 8;
-  const totalPages = Math.ceil(148 / perPage);
+  const [priority, setPriority] = useState("Semua");
+  const [query, setQuery] = useState("");
+  const office = AppSelectors.office();
+  const rows = AppSelectors.incomingLetters();
+  const filtered = filterIncomingRows(rows, query, priority);
+  const { totalPages, pageRows, safePage } = paginateRows(filtered, page, 8);
+
+  useEffect(() => {
+    if (safePage !== page) setPage(safePage);
+  }, [safePage, page]);
 
   return (
     <>
       <PageHead
         crumb={["Persuratan", "Rekap Surat Masuk"]}
         title="Rekap Surat Masuk"
-        sub="Arsip seluruh surat permohonan & surat masuk yang diterima"
+        sub="Arsip seluruh surat permohonan dan surat masuk yang diterima"
       />
-      <RekapToolbar addLabel="Catat Surat Masuk" onAdd={() => go("form-masuk")} />
+      <RekapToolbar
+        addLabel="Catat Surat Masuk"
+        onAdd={() => { AppApi.clearFormContext(); go("form-masuk"); }}
+        onExport={() => AppApi.exportLetters("incoming")}
+        search={query}
+        onSearch={(value) => { setQuery(value); setPage(1); }}
+        activeFilter={priority}
+        onFilterChange={(value) => { setPriority(value); setPage(1); }}
+        dateLabel={quarterLabel(rows[0]?.letter_date)}
+      />
       <div className="card">
         <div className="tbl-wrap">
           <table className="tbl">
@@ -59,30 +104,42 @@ function RekapSuratMasuk({ go }) {
               </tr>
             </thead>
             <tbody>
-              {SURAT_MASUK.map(s => (
-                <tr key={s.no}>
-                  <td className="tabnum td-strong">{s.no}</td>
-                  <td className="tabnum" style={{ fontSize: 12.5 }}>{s.nomor}</td>
+              {pageRows.map((item) => (
+                <tr key={item.id}>
+                  <td className="tabnum td-strong">{item.agenda_no}</td>
+                  <td className="tabnum" style={{ fontSize: 12.5 }}>{item.letter_no}</td>
                   <td>
-                    <div className="td-strong" style={{ maxWidth: 240 }}>{s.perihal}</div>
-                    <div className="muted" style={{ fontSize: 11.5, marginTop: 2 }}>{s.layanan}</div>
+                    <div className="td-strong" style={{ maxWidth: 250 }}>{item.subject}</div>
+                    <div className="muted" style={{ fontSize: 11.5, marginTop: 2 }}>{item.service_types?.name || "-"}</div>
                   </td>
                   <td>
-                    <div style={{ fontSize: 12.5 }}>{s.asal}</div>
+                    <div style={{ fontSize: 12.5 }}>{item.source_name}</div>
                     <div className="muted row gap-2 center" style={{ fontSize: 11.5, marginTop: 2 }}>
-                      <Icon name="chevright" size={11} />{s.tujuan}
+                      <Icon name="chevright" size={11} />{item.target_unit}
                     </div>
                   </td>
-                  <td className="tabnum" style={{ whiteSpace: "nowrap" }}>{s.tgl}</td>
-                  <td><SifatBadge s={s.sifat} /></td>
-                  <td><StatusBadge s={s.status} /></td>
-                  <td><RowActions wa /></td>
+                  <td className="tabnum" style={{ whiteSpace: "nowrap" }}>{formatDateId(item.letter_date)}</td>
+                  <td><SifatBadge s={item.priority} /></td>
+                  <td><StatusBadge s={item.status} /></td>
+                  <td>
+                    <RowActions
+                      onView={() => AppApi.previewLetter("incoming", item.id)}
+                      onPrint={() => AppApi.printLetter("incoming", item.id)}
+                      onDownload={() => AppApi.downloadLetter("incoming", item.id)}
+                      onWhatsApp={() => AppApi.openWhatsapp((office && office.whatsapp_notification) || "", AppApi.waMessageForLetter("incoming", item))}
+                      onEdit={() => { AppApi.setFormContext("incoming", item.id); go("form-masuk"); }}
+                      onDelete={() => {
+                        if (window.confirm(`Hapus surat masuk ${item.agenda_no}?`)) AppApi.deleteIncomingLetter(item.id);
+                      }}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {filtered.length === 0 && <EmptyHint icon="inbox">Tidak ada surat masuk yang sesuai filter.</EmptyHint>}
         </div>
-        <Pagination current={page} total={totalPages} onPage={setPage} />
+        {filtered.length > 0 && <Pagination current={safePage} total={totalPages} onPage={setPage} />}
       </div>
     </>
   );
@@ -90,7 +147,16 @@ function RekapSuratMasuk({ go }) {
 
 function RekapSuratKeluar({ go }) {
   const [page, setPage] = useState(1);
-  const totalPages = Math.ceil(231 / 7);
+  const [priority, setPriority] = useState("Semua");
+  const [query, setQuery] = useState("");
+  const office = AppSelectors.office();
+  const rows = AppSelectors.outgoingLetters();
+  const filtered = filterOutgoingRows(rows, query, priority);
+  const { totalPages, pageRows, safePage } = paginateRows(filtered, page, 8);
+
+  useEffect(() => {
+    if (safePage !== page) setPage(safePage);
+  }, [safePage, page]);
 
   return (
     <>
@@ -99,7 +165,16 @@ function RekapSuratKeluar({ go }) {
         title="Rekap Surat Keluar"
         sub="Arsip seluruh surat keluar yang diterbitkan instansi"
       />
-      <RekapToolbar addLabel="Buat Surat Keluar" onAdd={() => go("form-keluar")} />
+      <RekapToolbar
+        addLabel="Buat Surat Keluar"
+        onAdd={() => { AppApi.clearFormContext(); go("form-keluar"); }}
+        onExport={() => AppApi.exportLetters("outgoing")}
+        search={query}
+        onSearch={(value) => { setQuery(value); setPage(1); }}
+        activeFilter={priority}
+        onFilterChange={(value) => { setPriority(value); setPage(1); }}
+        dateLabel={quarterLabel(rows[0]?.letter_date)}
+      />
       <div className="card">
         <div className="tbl-wrap">
           <table className="tbl">
@@ -116,33 +191,42 @@ function RekapSuratKeluar({ go }) {
               </tr>
             </thead>
             <tbody>
-              {SURAT_KELUAR.map(s => (
-                <tr key={s.no}>
-                  <td className="tabnum td-strong">{s.no}</td>
-                  <td className="tabnum" style={{ fontSize: 12.5 }}>{s.nomor}</td>
+              {pageRows.map((item) => (
+                <tr key={item.id}>
+                  <td className="tabnum td-strong">{item.agenda_no}</td>
+                  <td className="tabnum" style={{ fontSize: 12.5 }}>{item.letter_no}</td>
+                  <td><div className="td-strong" style={{ maxWidth: 250 }}>{item.subject}</div></td>
                   <td>
-                    <div className="td-strong" style={{ maxWidth: 250 }}>{s.perihal}</div>
-                  </td>
-                  <td>
-                    <div style={{ fontSize: 12.5 }}>{s.asal}</div>
+                    <div style={{ fontSize: 12.5 }}>{item.source_unit}</div>
                     <div className="muted row gap-2 center" style={{ fontSize: 11.5, marginTop: 2 }}>
-                      <Icon name="chevright" size={11} />{s.tujuan}
+                      <Icon name="chevright" size={11} />{item.destination_name}
                     </div>
                   </td>
-                  <td className="tabnum" style={{ whiteSpace: "nowrap" }}>{s.tgl}</td>
-                  <td><SifatBadge s={s.sifat} /></td>
-                  <td><StatusBadge s={s.status} /></td>
-                  <td><RowActions wa /></td>
+                  <td className="tabnum" style={{ whiteSpace: "nowrap" }}>{formatDateId(item.letter_date)}</td>
+                  <td><SifatBadge s={item.priority} /></td>
+                  <td><StatusBadge s={item.status} /></td>
+                  <td>
+                    <RowActions
+                      onView={() => AppApi.previewLetter("outgoing", item.id)}
+                      onPrint={() => AppApi.printLetter("outgoing", item.id)}
+                      onDownload={() => AppApi.downloadLetter("outgoing", item.id)}
+                      onWhatsApp={() => AppApi.openWhatsapp((office && office.whatsapp_notification) || "", AppApi.waMessageForLetter("outgoing", item))}
+                      onEdit={() => { AppApi.setFormContext("outgoing", item.id); go("form-keluar"); }}
+                      onDelete={() => {
+                        if (window.confirm(`Hapus surat keluar ${item.agenda_no}?`)) AppApi.deleteOutgoingLetter(item.id);
+                      }}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {filtered.length === 0 && <EmptyHint icon="send">Tidak ada surat keluar yang sesuai filter.</EmptyHint>}
         </div>
-        <Pagination current={page} total={totalPages} onPage={setPage} />
+        {filtered.length > 0 && <Pagination current={safePage} total={totalPages} onPage={setPage} />}
       </div>
     </>
   );
 }
 
-window.RekapSuratMasuk = RekapSuratMasuk;
-window.RekapSuratKeluar = RekapSuratKeluar;
+Object.assign(window, { RekapSuratMasuk, RekapSuratKeluar });

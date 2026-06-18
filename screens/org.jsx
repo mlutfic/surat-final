@@ -3,22 +3,74 @@
             Data Kepegawaian, Manajemen Akun
    ============================================================ */
 
-const ORG_PDF_SRC = "assets/struktur-organisasi-kantor-camat-air-hitam-2026.pdf";
+function officeProfileFormValue(office) {
+  return {
+    office_name: office.office_name || "",
+    government_name: office.government_name || "",
+    district_name: office.district_name || "",
+    app_name: office.app_name || "",
+    app_expansion: office.app_expansion || "",
+    app_tagline: office.app_tagline || "",
+    background_text: office.background_text || "",
+    concept_text: office.concept_text || "",
+    address: office.address || "",
+    phone: office.phone || "",
+    email: office.email || "",
+    website: office.website || "-",
+    whatsapp_notification: office.whatsapp_notification || "",
+    head_name: office.head_name || "",
+    head_nip: office.head_nip || "",
+    head_title: office.head_title || "",
+    head_rank: office.head_rank || "",
+    service_hours: office.service_hours || "",
+    legal_basis_established: office.legal_basis_established || "",
+    legal_references_text: linesFromArray(office.legal_references),
+    goals_text: linesFromArray(office.goals),
+    mechanisms_text: linesFromArray(office.mechanisms),
+    internal_units_text: linesFromArray(office.internal_units),
+    village_units_text: linesFromArray(office.village_units),
+    complaint_categories_text: linesFromArray(office.complaint_categories),
+    logo_url: office.logo_url || "",
+    org_pdf_url: office.org_pdf_url || "",
+  };
+}
 
-/* ---------- Profil Kantor ---------- */
 function ProfilKantor() {
+  const office = AppSelectors.office();
+  const [editing, setEditing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [form, setForm] = useState(() => office ? officeProfileFormValue(office) : {});
+
+  useEffect(() => {
+    if (office) setForm(officeProfileFormValue(office));
+  }, [office?.id, office?.updated_at]);
+
+  if (!office) return <LoadingBlock label="Memuat profil kantor..." />;
+
   const info = [
-    ["Nama Instansi",      OFFICE.nama],
-    ["Pemerintah Daerah",  OFFICE.pemda],
-    [OFFICE.jabatanKepala, OFFICE.kepala],
-    ["Pangkat / Golongan", OFFICE.pangkatKepala],
-    ["NIP",                OFFICE.nip],
-    ["Alamat",             OFFICE.alamat],
-    ["Email Kantor",       OFFICE.email],
-    ["WhatsApp Notifikasi Dokumen", OFFICE.waNotifikasiDokumen],
-    ["Jam Pelayanan",      OFFICE.jam],
-    ["Dasar Pembentukan",  OFFICE.berdiri],
+    ["Nama Instansi", office.office_name],
+    ["Pemerintah Daerah", office.government_name],
+    [office.head_title, office.head_name],
+    ["Pangkat / Golongan", office.head_rank],
+    ["NIP", office.head_nip],
+    ["Alamat", office.address],
+    ["Email Kantor", office.email],
+    ["WhatsApp Notifikasi Dokumen", office.whatsapp_notification],
+    ["Jam Pelayanan", office.service_hours],
+    ["Dasar Pembentukan", office.legal_basis_established],
   ];
+
+  async function save() {
+    setBusy(true);
+    try {
+      await AppApi.saveOfficeProfile(form);
+      setEditing(false);
+    } catch (error) {
+      AppApi.setNotice(error.message || "Gagal memperbarui profil kantor.", "danger");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <>
@@ -27,45 +79,86 @@ function ProfilKantor() {
         title="Profil Kantor"
         sub="Identitas dan informasi resmi instansi"
         actions={
-          <button className="btn btn-primary">
-            <Icon name="edit" size={15} />Edit Profil
-          </button>
+          <div className="row gap-2">
+            {editing && (
+              <button type="button" className="btn btn-ghost" onClick={() => { setEditing(false); setForm(officeProfileFormValue(office)); }}>
+                Batal
+              </button>
+            )}
+            <button type="button" className="btn btn-primary" onClick={() => (editing ? save() : setEditing(true))} disabled={busy}>
+              <Icon name={editing ? "check" : "edit"} size={15} />{editing ? (busy ? "Menyimpan..." : "Simpan Profil") : "Edit Profil"}
+            </button>
+          </div>
         }
       />
+
+      {editing && (
+        <div className="card card-pad" style={{ marginBottom: 22 }}>
+          <div className="eyebrow" style={{ marginBottom: 18 }}>Form Profil Kantor</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <Field label="Nama Instansi" req><input className="input" value={form.office_name} onChange={(event) => setForm((value) => ({ ...value, office_name: event.target.value }))} /></Field>
+            <Field label="Pemerintah Daerah" req><input className="input" value={form.government_name} onChange={(event) => setForm((value) => ({ ...value, government_name: event.target.value }))} /></Field>
+            <Field label="Nama Aplikasi" req><input className="input" value={form.app_name} onChange={(event) => setForm((value) => ({ ...value, app_name: event.target.value }))} /></Field>
+            <Field label="Wilayah" req><input className="input" value={form.district_name} onChange={(event) => setForm((value) => ({ ...value, district_name: event.target.value }))} /></Field>
+            <Field label="Kepanjangan Aplikasi" req full><input className="input" value={form.app_expansion} onChange={(event) => setForm((value) => ({ ...value, app_expansion: event.target.value }))} /></Field>
+            <Field label="Tagline" req full><input className="input" value={form.app_tagline} onChange={(event) => setForm((value) => ({ ...value, app_tagline: event.target.value }))} /></Field>
+            <Field label="Alamat" req full><textarea className="textarea" value={form.address} onChange={(event) => setForm((value) => ({ ...value, address: event.target.value }))} /></Field>
+            <Field label="Telepon / WA" req><input className="input tabnum" value={form.phone} onChange={(event) => setForm((value) => ({ ...value, phone: event.target.value }))} /></Field>
+            <Field label="WA Notifikasi Dokumen" req><input className="input tabnum" value={form.whatsapp_notification} onChange={(event) => setForm((value) => ({ ...value, whatsapp_notification: event.target.value }))} /></Field>
+            <Field label="Email" req><input className="input" value={form.email} onChange={(event) => setForm((value) => ({ ...value, email: event.target.value }))} /></Field>
+            <Field label="Website"><input className="input" value={form.website} onChange={(event) => setForm((value) => ({ ...value, website: event.target.value }))} /></Field>
+            <Field label="Jam Pelayanan" req><input className="input" value={form.service_hours} onChange={(event) => setForm((value) => ({ ...value, service_hours: event.target.value }))} /></Field>
+            <Field label="Nama Pimpinan" req><input className="input" value={form.head_name} onChange={(event) => setForm((value) => ({ ...value, head_name: event.target.value }))} /></Field>
+            <Field label="Jabatan Pimpinan" req><input className="input" value={form.head_title} onChange={(event) => setForm((value) => ({ ...value, head_title: event.target.value }))} /></Field>
+            <Field label="NIP" req><input className="input tabnum" value={form.head_nip} onChange={(event) => setForm((value) => ({ ...value, head_nip: event.target.value }))} /></Field>
+            <Field label="Pangkat / Golongan" req><input className="input" value={form.head_rank} onChange={(event) => setForm((value) => ({ ...value, head_rank: event.target.value }))} /></Field>
+            <Field label="Dasar Pembentukan" req full><input className="input" value={form.legal_basis_established} onChange={(event) => setForm((value) => ({ ...value, legal_basis_established: event.target.value }))} /></Field>
+            <Field label="Latar Belakang" req full><textarea className="textarea" value={form.background_text} onChange={(event) => setForm((value) => ({ ...value, background_text: event.target.value }))} /></Field>
+            <Field label="Konsep Aplikasi" req full><textarea className="textarea" value={form.concept_text} onChange={(event) => setForm((value) => ({ ...value, concept_text: event.target.value }))} /></Field>
+            <Field label="Dasar Hukum (1 baris per item)" full><textarea className="textarea" value={form.legal_references_text} onChange={(event) => setForm((value) => ({ ...value, legal_references_text: event.target.value }))} /></Field>
+            <Field label="Tujuan (1 baris per item)" full><textarea className="textarea" value={form.goals_text} onChange={(event) => setForm((value) => ({ ...value, goals_text: event.target.value }))} /></Field>
+            <Field label="Mekanisme (1 baris per item)" full><textarea className="textarea" value={form.mechanisms_text} onChange={(event) => setForm((value) => ({ ...value, mechanisms_text: event.target.value }))} /></Field>
+            <Field label="Unit Internal (1 baris per item)" full><textarea className="textarea" value={form.internal_units_text} onChange={(event) => setForm((value) => ({ ...value, internal_units_text: event.target.value }))} /></Field>
+            <Field label="Daftar Desa (1 baris per item)" full><textarea className="textarea" value={form.village_units_text} onChange={(event) => setForm((value) => ({ ...value, village_units_text: event.target.value }))} /></Field>
+            <Field label="Kategori Pengaduan (1 baris per item)" full><textarea className="textarea" value={form.complaint_categories_text} onChange={(event) => setForm((value) => ({ ...value, complaint_categories_text: event.target.value }))} /></Field>
+            <Field label="URL Logo" full><input className="input" value={form.logo_url} onChange={(event) => setForm((value) => ({ ...value, logo_url: event.target.value }))} /></Field>
+            <Field label="URL PDF Struktur Organisasi" full><input className="input" value={form.org_pdf_url} onChange={(event) => setForm((value) => ({ ...value, org_pdf_url: event.target.value }))} /></Field>
+          </div>
+        </div>
+      )}
+
       <div className="form-grid">
-        {/* Identity card */}
         <div style={{ order: 2 }}>
           <div className="card card-pad">
             <div className="eyebrow" style={{ marginBottom: 10 }}>Informasi Umum</div>
-            {info.map(([k, v]) => (
-              <div className="info-row" key={k}>
-                <div className="ik">{k}</div>
-                <div className="iv">{v}</div>
+            {info.map(([label, value]) => (
+              <div className="info-row" key={label}>
+                <div className="ik">{label}</div>
+                <div className="iv">{value}</div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Logo + kontak */}
         <div className="col gap-4" style={{ order: 1 }}>
           <div className="card card-pad" style={{ textAlign: "center" }}>
             <div className="profil-logo" style={{ margin: "0 auto 14px" }}>
-              <img src="assets/sarolangun-logo.jpeg" alt="" />
+              <img src={office.logo_url} alt="" />
             </div>
-            <h3 style={{ fontSize: 16 }}>{APP_INFO.nama}</h3>
-            <div className="muted" style={{ fontSize: 13, marginTop: 3 }}>{APP_INFO.wilayah}</div>
+            <h3 style={{ fontSize: 16 }}>{office.app_name}</h3>
+            <div className="muted" style={{ fontSize: 13, marginTop: 3 }}>{office.district_name}</div>
             <div className="row gap-2 center" style={{ marginTop: 10, justifyContent: "center" }}>
               <span className="badge b-ok"><Icon name="shield" size={12} />Terverifikasi</span>
               <span className="badge b-biasa"><Icon name="globe" size={12} />Publik</span>
             </div>
             <div className="profil-divider" />
             <div className="col" style={{ gap: 10, textAlign: "left" }}>
-              {[["mappin", OFFICE.alamat], ["mail", OFFICE.email], ["phone", `WA dokumen: ${OFFICE.waNotifikasiDokumen}`], ["calendar", OFFICE.jam]].map(([ic, t]) => (
-                <div key={ic} className="profil-contact-row">
+              {[["mappin", office.address], ["mail", office.email], ["phone", `WA dokumen: ${office.whatsapp_notification}`], ["calendar", office.service_hours]].map(([icon, text]) => (
+                <div key={icon} className="profil-contact-row">
                   <span style={{ color: "var(--navy-500)", flexShrink: 0, marginTop: 1 }}>
-                    <Icon name={ic} size={15} />
+                    <Icon name={icon} size={15} />
                   </span>
-                  <span style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>{t}</span>
+                  <span style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>{text}</span>
                 </div>
               ))}
             </div>
@@ -76,25 +169,18 @@ function ProfilKantor() {
   );
 }
 
-/* ---------- Struktur Organisasi ---------- */
-function OrgNode({ name, role, head }) {
-  return (
-    <div className={"org-node " + (head ? "head" : "")}>
-      <div className="on">{name}</div>
-      <div className="op">{role}</div>
-    </div>
-  );
-}
-
 function StrukturOrganisasi() {
+  const office = AppSelectors.office();
+  if (!office) return <LoadingBlock label="Memuat struktur organisasi..." />;
+
   return (
     <>
       <PageHead
         crumb={["Profil", "Struktur Organisasi"]}
         title="Struktur Organisasi"
-        sub={`Dokumen struktur organisasi ${APP_INFO.wilayah}`}
+        sub={`Dokumen struktur organisasi ${office.district_name}`}
         actions={
-          <a className="btn btn-primary" href={ORG_PDF_SRC} target="_blank" rel="noreferrer">
+          <a className="btn btn-primary" href={office.org_pdf_url} target="_blank" rel="noreferrer">
             <Icon name="download" size={15} />Buka PDF
           </a>
         }
@@ -102,46 +188,100 @@ function StrukturOrganisasi() {
       <div className="card org-pdf-shell">
         <div className="org-pdf-toolbar">
           <div>
-            <h3>Struktur Organisasi Kantor Camat Air Hitam Tahun 2026</h3>
-            <p>Dokumen ditampilkan sesuai file PDF resmi yang diberikan.</p>
+            <h3>Struktur Organisasi {office.office_name}</h3>
+            <p>Dokumen ditampilkan dari sumber data resmi yang tersimpan pada profil kantor.</p>
           </div>
-          <a className="btn btn-ghost" href={ORG_PDF_SRC} target="_blank" rel="noreferrer">
+          <a className="btn btn-ghost" href={office.org_pdf_url} target="_blank" rel="noreferrer">
             <Icon name="eye" size={15} />Lihat penuh
           </a>
         </div>
-        <iframe className="org-pdf-frame" title="Struktur Organisasi Kantor Camat Air Hitam Tahun 2026" src={ORG_PDF_SRC}></iframe>
-        <div className="org-pdf-fallback">
-          Jika PDF tidak tampil, buka dokumen melalui tombol <b>Lihat penuh</b>.
-        </div>
+        <iframe className="org-pdf-frame" title="Struktur Organisasi" src={office.org_pdf_url}></iframe>
+        <div className="org-pdf-fallback">Jika PDF tidak tampil, buka dokumen melalui tombol <b>Lihat penuh</b>.</div>
       </div>
     </>
   );
 }
 
-/* ---------- Data Kepegawaian ---------- */
+function EmployeeEditor({ form, setForm, onSave, onCancel, busy }) {
+  return (
+    <div className="card card-pad" style={{ marginBottom: 20 }}>
+      <div className="eyebrow" style={{ marginBottom: 18 }}>{form.id ? "Edit Pegawai" : "Tambah Pegawai"}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <Field label="Nama Lengkap" req><input className="input" value={form.full_name} onChange={(event) => setForm((value) => ({ ...value, full_name: event.target.value }))} /></Field>
+        <Field label="NIP" req><input className="input tabnum" value={form.nip} onChange={(event) => setForm((value) => ({ ...value, nip: event.target.value }))} /></Field>
+        <Field label="Jabatan" req><input className="input" value={form.position} onChange={(event) => setForm((value) => ({ ...value, position: event.target.value }))} /></Field>
+        <Field label="Golongan"><input className="input" value={form.grade} onChange={(event) => setForm((value) => ({ ...value, grade: event.target.value }))} /></Field>
+        <Field label="Unit Kerja" req><input className="input" value={form.work_unit} onChange={(event) => setForm((value) => ({ ...value, work_unit: event.target.value }))} /></Field>
+        <Field label="Status" req>
+          <select className="select" value={form.employment_status} onChange={(event) => setForm((value) => ({ ...value, employment_status: event.target.value }))}>
+            {EMPLOYMENT_STATUS_OPTIONS.map((item) => <option key={item}>{item}</option>)}
+          </select>
+        </Field>
+      </div>
+      <div className="row gap-2" style={{ marginTop: 20 }}>
+        <button type="button" className="btn btn-primary" disabled={busy} onClick={onSave}><Icon name="check" size={15} />{busy ? "Menyimpan..." : "Simpan Pegawai"}</button>
+        <button type="button" className="btn btn-ghost" disabled={busy} onClick={onCancel}>Batal</button>
+      </div>
+    </div>
+  );
+}
+
 function DataKepegawaian() {
   const [filter, setFilter] = useState("Semua");
-  const filtered = filter === "Semua" ? PEGAWAI : PEGAWAI.filter(p => p.status === filter);
+  const [query, setQuery] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [form, setForm] = useState({
+    id: "",
+    full_name: "",
+    nip: "",
+    position: "",
+    grade: "-",
+    work_unit: "",
+    employment_status: "PNS",
+  });
+  const [editing, setEditing] = useState(false);
+  const employees = AppSelectors.employees();
+
+  const filtered = employees.filter((item) => {
+    const matchesFilter = filter === "Semua" || item.employment_status === filter;
+    const keyword = query.trim().toLowerCase();
+    const haystack = [item.full_name, item.nip, item.position, item.work_unit].join(" ").toLowerCase();
+    return matchesFilter && (!keyword || haystack.includes(keyword));
+  });
+
+  async function save() {
+    setBusy(true);
+    try {
+      await AppApi.saveEmployee(form);
+      setEditing(false);
+      setForm({ id: "", full_name: "", nip: "", position: "", grade: "-", work_unit: "", employment_status: "PNS" });
+    } catch (error) {
+      AppApi.setNotice(error.message || "Gagal menyimpan pegawai.", "danger");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <>
       <PageHead
         crumb={["Profil", "Data Kepegawaian"]}
         title="Data Kepegawaian"
-        sub={`${PEGAWAI.length} pegawai terdaftar`}
+        sub={`${employees.length} pegawai terdaftar`}
         actions={
-          <button className="btn btn-primary">
+          <button type="button" className="btn btn-primary" onClick={() => { setEditing(true); setForm({ id: "", full_name: "", nip: "", position: "", grade: "-", work_unit: "", employment_status: "PNS" }); }}>
             <Icon name="plus" size={15} />Tambah Pegawai
           </button>
         }
       />
+      {editing && <EmployeeEditor form={form} setForm={setForm} busy={busy} onSave={save} onCancel={() => setEditing(false)} />}
       <div className="toolbar">
         <div className="searchbar" style={{ maxWidth: 280, flex: "0 0 auto" }}>
           <Icon name="search" size={16} />
-          <input placeholder="Cari nama / NIP / jabatan…" />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari nama / NIP / jabatan…" />
         </div>
-        {["Semua", "PNS", "PPPK", "Honorer"].map(f => (
-          <button key={f} className={"chip " + (filter === f ? "on" : "")} onClick={() => setFilter(f)}>{f}</button>
+        {["Semua", ...EMPLOYMENT_STATUS_OPTIONS].map((item) => (
+          <button key={item} type="button" className={"chip " + (filter === item ? "on" : "")} onClick={() => setFilter(item)}>{item}</button>
         ))}
       </div>
       <div className="card">
@@ -158,65 +298,136 @@ function DataKepegawaian() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(p => (
-                <tr key={p.nama}>
+              {filtered.map((item) => (
+                <tr key={item.id}>
                   <td>
                     <div className="row gap-3 center">
-                      <Avatar name={p.nama} size={36} />
+                      <Avatar name={item.full_name} size={36} />
                       <div>
-                        <div className="td-strong">{p.nama}</div>
-                        <div className="muted" style={{ fontSize: 12, marginTop: 1 }}>{p.jabatan}</div>
+                        <div className="td-strong">{item.full_name}</div>
+                        <div className="muted" style={{ fontSize: 12, marginTop: 1 }}>{item.position}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="tabnum" style={{ fontSize: 12.5 }}>{p.nip}</td>
-                  <td className="tabnum">{p.gol}</td>
-                  <td>{p.unit}</td>
+                  <td className="tabnum" style={{ fontSize: 12.5 }}>{item.nip}</td>
+                  <td className="tabnum">{item.grade}</td>
+                  <td>{item.work_unit}</td>
                   <td>
-                    <span className={"badge " + (p.status === "PNS" ? "b-ok" : p.status === "PPPK" ? "b-biasa" : "b-draft")}>
-                      {p.status}
+                    <span className={"badge " + (item.employment_status === "PNS" ? "b-ok" : item.employment_status === "PPPK" ? "b-biasa" : "b-draft")}>
+                      {item.employment_status}
                     </span>
                   </td>
                   <td>
-                    <div className="row gap-2" style={{ justifyContent: "flex-end" }}>
-                      <button className="iconbtn" title="Lihat"><Icon name="eye" size={16} /></button>
-                      <button className="iconbtn" title="Edit"><Icon name="edit" size={16} /></button>
-                      <button className="iconbtn danger" title="Hapus"><Icon name="trash" size={16} /></button>
-                    </div>
+                    <RowActions
+                      onView={() => AppApi.setNotice(`Pegawai: ${item.full_name} · ${item.position}`, "info")}
+                      onEdit={() => { setEditing(true); setForm({ ...item }); }}
+                      onDelete={() => {
+                        if (window.confirm(`Hapus data pegawai ${item.full_name}?`)) AppApi.deleteEmployee(item.id);
+                      }}
+                    />
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        {filtered.length === 0 && (
-          <EmptyHint icon="users">Tidak ada pegawai dengan status "{filter}"</EmptyHint>
-        )}
+        {filtered.length === 0 && <EmptyHint icon="users">Tidak ada pegawai dengan filter yang dipilih.</EmptyHint>}
       </div>
     </>
   );
 }
 
-/* ---------- Manajemen Akun ---------- */
+function AccountEditor({ form, setForm, onSave, onCancel, busy, office }) {
+  const villageOptions = office?.village_units || [];
+
+  return (
+    <div className="card card-pad" style={{ marginBottom: 20 }}>
+      <div className="eyebrow" style={{ marginBottom: 18 }}>{form.id ? "Edit Akun" : "Tambah Akun"}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <Field label="Nama Pengguna" req><input className="input" value={form.full_name} onChange={(event) => setForm((value) => ({ ...value, full_name: event.target.value }))} /></Field>
+        <Field label="Username" req><input className="input" value={form.username} onChange={(event) => setForm((value) => ({ ...value, username: event.target.value }))} /></Field>
+        <Field label="Email" req><input className="input" value={form.email} onChange={(event) => setForm((value) => ({ ...value, email: event.target.value }))} /></Field>
+        <Field label="Role" req>
+          <select className="select" value={form.role} onChange={(event) => setForm((value) => ({ ...value, role: event.target.value, scope_village: event.target.value === "User" ? value.scope_village : "" }))}>
+            {ACCOUNT_ROLE_OPTIONS.map((item) => <option key={item}>{item}</option>)}
+          </select>
+        </Field>
+        <Field label="Unit" req><input className="input" value={form.unit_name} onChange={(event) => setForm((value) => ({ ...value, unit_name: event.target.value }))} /></Field>
+        <Field label="Scope Desa">
+          <select className="select" value={form.scope_village || ""} onChange={(event) => setForm((value) => ({ ...value, scope_village: event.target.value }))}>
+            <option value="">Tidak dibatasi</option>
+            {villageOptions.map((item) => <option key={item}>{item}</option>)}
+          </select>
+        </Field>
+        <Field label={form.id ? "Reset Password Baru (opsional)" : "Password Awal"}>
+          <input className="input" type="password" value={form.password} onChange={(event) => setForm((value) => ({ ...value, password: event.target.value }))} placeholder={form.id ? "Kosongkan bila tidak berubah" : "Contoh: AirHitam2026!"} />
+        </Field>
+        <Field label="Status">
+          <select className="select" value={String(form.is_active)} onChange={(event) => setForm((value) => ({ ...value, is_active: event.target.value === "true" }))}>
+            <option value="true">Aktif</option>
+            <option value="false">Nonaktif</option>
+          </select>
+        </Field>
+      </div>
+      <div className="row gap-2" style={{ marginTop: 20 }}>
+        <button type="button" className="btn btn-primary" disabled={busy} onClick={onSave}><Icon name="check" size={15} />{busy ? "Menyimpan..." : "Simpan Akun"}</button>
+        <button type="button" className="btn btn-ghost" disabled={busy} onClick={onCancel}>Batal</button>
+      </div>
+    </div>
+  );
+}
+
 function ManajemenAkun() {
-  const roleCounts = AKUN.reduce((acc, akun) => {
-    acc[akun.role] = (acc[akun.role] || 0) + 1;
-    return acc;
+  const office = AppSelectors.office();
+  const accounts = AppSelectors.accounts();
+  const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({
+    id: "",
+    full_name: "",
+    username: "",
+    email: "",
+    role: "User",
+    unit_name: "",
+    scope_village: "",
+    is_active: true,
+    password: "",
+  });
+
+  if (!office) return <LoadingBlock label="Memuat manajemen akun..." />;
+
+  const roleCounts = accounts.reduce((carry, item) => {
+    carry[item.role] = (carry[item.role] || 0) + 1;
+    return carry;
   }, {});
-  const activeCount = AKUN.filter(a => a.aktif).length;
+  const activeCount = accounts.filter((item) => item.is_active).length;
+
+  async function save() {
+    setBusy(true);
+    try {
+      await AppApi.saveAccount(form);
+      setEditing(false);
+      setForm({ id: "", full_name: "", username: "", email: "", role: "User", unit_name: "", scope_village: "", is_active: true, password: "" });
+    } catch (error) {
+      AppApi.setNotice(error.message || "Gagal menyimpan akun.", "danger");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <>
       <PageHead
         crumb={["Pengaturan", "Manajemen Akun"]}
         title="Manajemen Akun"
-        sub={`${AKUN.length} akun terdaftar: 9 desa dan 1 kantor camat`}
+        sub={`${accounts.length} akun terdaftar: 9 desa dan 1 kantor camat`}
         actions={
-          <button className="btn btn-primary">
+          <button type="button" className="btn btn-primary" onClick={() => { setEditing(true); setForm({ id: "", full_name: "", username: "", email: "", role: "User", unit_name: "", scope_village: "", is_active: true, password: "AirHitam2026!" }); }}>
             <Icon name="plus" size={15} />Tambah Akun
           </button>
         }
       />
+      {editing && <AccountEditor form={form} setForm={setForm} office={office} busy={busy} onSave={save} onCancel={() => setEditing(false)} />}
       <div className="stat-grid" style={{ marginBottom: 20, gridTemplateColumns: "repeat(3, 1fr)" }}>
         <div className="stat">
           <div className="si" style={{ background: "var(--purple-bg)", color: "var(--purple)" }}><Icon name="shield" size={20} /></div>
@@ -234,10 +445,10 @@ function ManajemenAkun() {
       <div className="card card-pad" style={{ marginBottom: 20 }}>
         <div className="eyebrow" style={{ marginBottom: 12 }}>Business Rule Aktif</div>
         <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.85 }}>
-          <li>Total akun aktif dibatasi 10 user: 9 operator desa dan 1 operator kantor camat.</li>
-          <li>Akun desa dipakai berbasis instansi, bukan nama personel, agar pergantian operator tidak mengubah struktur akses.</li>
-          <li>Setiap operator desa hanya menginput dan memantau dokumen milik desanya sendiri, sedangkan kantor camat memverifikasi seluruh dokumen.</li>
-          <li>Notifikasi dokumen otomatis dipusatkan ke WhatsApp resmi kecamatan: <b>{OFFICE.waNotifikasiDokumen}</b>.</li>
+          <li>Total akun aktif ditetapkan 10 user: 9 operator desa dan 1 operator kantor camat.</li>
+          <li>Akun desa disusun berbasis unit kerja agar pergantian operator tidak mengubah struktur akses.</li>
+          <li>Operator desa hanya menginput dan memantau dokumen milik desanya, sedangkan kantor camat memverifikasi seluruh dokumen.</li>
+          <li>Notifikasi dokumen otomatis dipusatkan ke WhatsApp resmi kecamatan: <b>{office.whatsapp_notification}</b>.</li>
         </ul>
       </div>
       <div className="card">
@@ -255,36 +466,51 @@ function ManajemenAkun() {
               </tr>
             </thead>
             <tbody>
-              {AKUN.map(a => (
-                <tr key={a.user}>
+              {accounts.map((item) => (
+                <tr key={item.id}>
                   <td>
                     <div className="row gap-3 center">
-                      <Avatar name={a.nama} size={36} />
+                      <Avatar name={item.full_name} size={36} />
                       <div>
-                        <div className="td-strong">{a.nama}</div>
-                        <div className="muted" style={{ fontSize: 12, marginTop: 1 }}>{a.email}</div>
+                        <div className="td-strong">{item.full_name}</div>
+                        <div className="muted" style={{ fontSize: 12, marginTop: 1 }}>{item.email}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="tabnum" style={{ fontSize: 12.5 }}>@{a.user}</td>
-                  <td>{a.unit}</td>
+                  <td className="tabnum" style={{ fontSize: 12.5 }}>@{item.username}</td>
+                  <td>{item.unit_name}</td>
                   <td>
-                    <span className={"badge " + (a.role === "Super Admin" ? "b-rahasia" : "b-draft")}>
-                      {a.role === "Super Admin" && <Icon name="shield" size={11} />}{a.role}
+                    <span className={"badge " + (item.role === "Super Admin" ? "b-rahasia" : "b-draft")}>
+                      {item.role === "Super Admin" && <Icon name="shield" size={11} />}{item.role}
                     </span>
                   </td>
                   <td>
-                    <span className={"badge " + (a.aktif ? "b-ok" : "b-draft")}>
-                      <span className="dot" />{a.aktif ? "Aktif" : "Nonaktif"}
+                    <span className={"badge " + (item.is_active ? "b-ok" : "b-draft")}>
+                      <span className="dot" />{item.is_active ? "Aktif" : "Nonaktif"}
                     </span>
                   </td>
-                  <td className="tabnum muted" style={{ fontSize: 12 }}>{a.last}</td>
+                  <td className="tabnum muted" style={{ fontSize: 12 }}>{item.last_login_at ? formatDateTimeId(item.last_login_at) : "-"}</td>
                   <td>
-                    <div className="row gap-2" style={{ justifyContent: "flex-end" }}>
-                      <button className="iconbtn" title="Atur Hak Akses"><Icon name="settings" size={16} /></button>
-                      <button className="iconbtn" title="Edit"><Icon name="edit" size={16} /></button>
-                      <button className="iconbtn danger" title="Hapus"><Icon name="trash" size={16} /></button>
-                    </div>
+                    <RowActions
+                      onView={() => AppApi.setNotice(`Akun ${item.username} · ${item.unit_name}`, "info")}
+                      onEdit={() => {
+                        setEditing(true);
+                        setForm({
+                          id: item.id,
+                          full_name: item.full_name,
+                          username: item.username,
+                          email: item.email,
+                          role: item.role,
+                          unit_name: item.unit_name,
+                          scope_village: item.scope_village || "",
+                          is_active: Boolean(item.is_active),
+                          password: "",
+                        });
+                      }}
+                      onDelete={() => {
+                        if (window.confirm(`Hapus akun @${item.username}?`)) AppApi.deleteAccount(item.id);
+                      }}
+                    />
                   </td>
                 </tr>
               ))}

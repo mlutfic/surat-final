@@ -1,167 +1,233 @@
 /* ============================================================
-   SISTEM SURAT — Mock data (Bahasa Indonesia)
+   SISTEM SURAT — Shared constants and utilities
    ============================================================ */
 
-const OFFICE = {
-  nama: "Pemerintah Kecamatan Air Hitam",
-  pemda: "Kabupaten Sarolangun",
-  alamat: "Padang Lalang, Desa Jernih, Kecamatan Air Hitam, Kabupaten Sarolangun, Provinsi Jambi",
-  telp: "0823 2487 4997",
-  email: "kantorcamatairhitam@gmail.com",
-  web: "-",
-  waNotifikasiDokumen: "0823 2487 4997",
-  kepala: "FATHURRAHMAN, S.STP",
-  nip: "198609102004121002",
-  jabatanKepala: "Camat Air Hitam",
-  pangkatKepala: "Pembina (IV/a)",
-  jam: "Senin-Kamis, 07.30-16.45 WIB; Jumat, 07.30-11.30 WIB",
-  berdiri: "Peraturan Daerah Kabupaten Sarolangun Nomor 04 Tahun 2004",
-};
-
-const APP_INFO = {
-  nama: "DILAN CERDAS",
-  wilayah: "Kecamatan Air Hitam",
-  kepanjangan: "Digitalisasi Layanan yang Cepat, Responsif, Dinamis, Akuntabel, dan Sistematis",
-  tagline: "Layanan digital Kecamatan Air Hitam untuk warga dan petugas.",
-  latar:
-    "Sebagian layanan masih dicatat manual dan sulit dipantau. DILAN CERDAS dibuat agar warga lebih mudah mengurus layanan, sementara petugas dapat bekerja lebih rapi.",
-  konsep:
-    "Satu aplikasi untuk informasi layanan, permohonan surat, pengaduan, survei kepuasan, dan arsip digital kecamatan.",
-  tujuan: [
-    "Mempercepat layanan administrasi kecamatan.",
-    "Membuat alur kerja lebih jelas dan mudah dipantau.",
-    "Memudahkan warga memperoleh informasi layanan.",
-    "Merapikan pencatatan dan arsip dokumen.",
-    "Menyediakan kanal pengaduan masyarakat.",
-    "Mendukung evaluasi layanan melalui survei IKM.",
-    "Membantu petugas bekerja lebih tertib dan responsif.",
-  ],
-  dasarHukum: [
-    "Undang-Undang Nomor 25 Tahun 2009 tentang Pelayanan Publik.",
-    "Undang-Undang Nomor 23 Tahun 2014 tentang Pemerintahan Daerah.",
-    "Peraturan Pemerintah Nomor 38 Tahun 2017 tentang Inovasi Daerah.",
-    "Peraturan Presiden Nomor 95 Tahun 2018 tentang Sistem Pemerintahan Berbasis Elektronik (SPBE).",
-    "Peraturan Menteri Dalam Negeri Nomor 104 Tahun 2018 tentang Penilaian dan Pemberian Penghargaan dan/atau Insentif Inovasi Daerah.",
-    "Peraturan Daerah Kabupaten Sarolangun Nomor 04 Tahun 2004 tentang Pembentukan Kecamatan Air Hitam.",
-    "Peraturan Daerah Kabupaten Sarolangun Nomor 6 Tahun 2025 tentang Perubahan Keempat atas Peraturan Daerah Kabupaten Sarolangun Nomor 5 Tahun 2016 tentang Pembentukan dan Susunan Perangkat Daerah.",
-  ],
-  mekanisme: [
-    "Digitalisasi administrasi pelayanan.",
-    "Penggunaan aplikasi atau media layanan online.",
-    "Penyediaan layanan informasi terpadu.",
-    "Sistem pengarsipan digital.",
-    "Monitoring dan evaluasi pelayanan secara berkala.",
-    "Penyediaan kanal pengaduan dan konsultasi masyarakat.",
-    "Peningkatan kapasitas SDM pengelola layanan.",
-  ],
-};
-
 const SIFAT = {
-  Biasa:   "b-biasa",
+  Biasa: "b-biasa",
   Penting: "b-penting",
-  Segera:  "b-segera",
+  Segera: "b-segera",
   Rahasia: "b-rahasia",
 };
 
-const JENIS_LAYANAN = [
-  "Surat Pengantar Perbaikan Data KTP",
-  "Surat Pengantar Perbaikan Data KK / Pemisahan KK",
-  "Surat Rekomendasi Izin Kegiatan / Keramaian",
-  "Surat Rekomendasi Penggantian Antar Waktu BPD",
-  "Surat Rekomendasi Rotasi / Pemberhentian / Pengisian / Pelantikan Perangkat Desa",
-  "Surat Rekomendasi Nikah",
-  "Lainnya",
-];
-
-const SURAT_MASUK = [
-  { no: "SM-2026-0148", nomor: "470/148/KEC-AH/VI/2026", tgl: "31 Mei 2026", asal: "Desa Jernih", tujuan: "Kasi Pelayanan Umum", perihal: "Permohonan pengantar perbaikan data KTP", layanan: "Surat Pengantar Perbaikan Data KTP", sifat: "Penting", status: "Baru", file: "pengantar-ktp-jernih.pdf" },
-  { no: "SM-2026-0147", nomor: "471/147/KEC-AH/V/2026", tgl: "30 Mei 2026", asal: "Desa Lubuk Kepayang", tujuan: "Kasi Pelayanan Umum", perihal: "Permohonan perbaikan data Kartu Keluarga", layanan: "Surat Pengantar Perbaikan Data KK / Pemisahan KK", sifat: "Segera", status: "Diproses", file: "perbaikan-kk.pdf" },
-  { no: "SM-2026-0146", nomor: "300/146/KEC-AH/V/2026", tgl: "29 Mei 2026", asal: "Panitia Kegiatan Desa Baru", tujuan: "Kasi Trantib", perihal: "Rekomendasi izin kegiatan masyarakat", layanan: "Surat Rekomendasi Izin Kegiatan / Keramaian", sifat: "Biasa", status: "Selesai", file: "izin-keramaian.pdf" },
-  { no: "SM-2026-0145", nomor: "140/145/KEC-AH/V/2026", tgl: "28 Mei 2026", asal: "BPD Desa Semurung", tujuan: "Kasi Pemerintahan", perihal: "Pengajuan rekomendasi PAW BPD", layanan: "Surat Rekomendasi Penggantian Antar Waktu BPD", sifat: "Biasa", status: "Selesai", file: "rekom-paw-bpd.pdf" },
-  { no: "SM-2026-0144", nomor: "141/144/KEC-AH/V/2026", tgl: "27 Mei 2026", asal: "Pemerintah Desa Bukit Suban", tujuan: "Kasi PMD dan Kelurahan", perihal: "Permohonan rekomendasi pelantikan perangkat desa", layanan: "Surat Rekomendasi Rotasi / Pemberhentian / Pengisian / Pelantikan Perangkat Desa", sifat: "Rahasia", status: "Diproses", file: "perangkat-desa.pdf" },
-  { no: "SM-2026-0143", nomor: "474/143/KEC-AH/V/2026", tgl: "26 Mei 2026", asal: "Desa Pematang Kabau", tujuan: "Kasi Kesejahteraan Sosial", perihal: "Permohonan rekomendasi nikah", layanan: "Surat Rekomendasi Nikah", sifat: "Penting", status: "Selesai", file: "rekom-nikah.pdf" },
-  { no: "SM-2026-0142", nomor: "470/142/KEC-AH/V/2026", tgl: "24 Mei 2026", asal: "Desa Mentawak Baru", tujuan: "Sekretariat", perihal: "Permohonan informasi alur layanan DILAN CERDAS", layanan: "Surat Pengantar Perbaikan Data KTP", sifat: "Segera", status: "Selesai", file: "permohonan-info.pdf" },
-  { no: "SM-2026-0141", nomor: "005/141/KEC-AH/V/2026", tgl: "22 Mei 2026", asal: "Pemerintah Kabupaten Sarolangun", tujuan: "Camat Air Hitam", perihal: "Undangan koordinasi inovasi pelayanan publik", layanan: "Surat Rekomendasi Izin Kegiatan / Keramaian", sifat: "Biasa", status: "Selesai", file: "undangan-koordinasi.pdf" },
-];
-
-const SURAT_KELUAR = [
-  { no: "SK-2026-0231", nomor: "470/231/KEC-AH/VI/2026", tgl: "31 Mei 2026", asal: "Kasi Pelayanan Umum", tujuan: "Desa Jernih", perihal: "Surat pengantar perbaikan data KTP", sifat: "Penting", status: "Terkirim", file: "pengantar-ktp.pdf" },
-  { no: "SK-2026-0230", nomor: "471/230/KEC-AH/V/2026", tgl: "30 Mei 2026", asal: "Kasi Pelayanan Umum", tujuan: "Dinas Dukcapil Kabupaten Sarolangun", perihal: "Pengantar perbaikan data Kartu Keluarga", sifat: "Biasa", status: "Terkirim", file: "pengantar-kk.pdf" },
-  { no: "SK-2026-0229", nomor: "300/229/KEC-AH/V/2026", tgl: "29 Mei 2026", asal: "Kasi Trantib", tujuan: "Panitia Kegiatan Desa Baru", perihal: "Rekomendasi izin kegiatan/keramaian", sifat: "Segera", status: "Terkirim", file: "rekom-keramaian.pdf" },
-  { no: "SK-2026-0228", nomor: "140/228/KEC-AH/V/2026", tgl: "27 Mei 2026", asal: "Kasi Pemerintahan", tujuan: "BPD Desa Semurung", perihal: "Rekomendasi penggantian antar waktu BPD", sifat: "Rahasia", status: "Draft", file: "rekom-paw-bpd.pdf" },
-  { no: "SK-2026-0227", nomor: "141/227/KEC-AH/V/2026", tgl: "26 Mei 2026", asal: "Kasi PMD dan Kelurahan", tujuan: "Kepala Desa Bukit Suban", perihal: "Rekomendasi pelantikan perangkat desa", sifat: "Penting", status: "Terkirim", file: "rekom-perangkat-desa.pdf" },
-  { no: "SK-2026-0226", nomor: "474/226/KEC-AH/V/2026", tgl: "23 Mei 2026", asal: "Kasi Kesejahteraan Sosial", tujuan: "KUA Kecamatan Air Hitam", perihal: "Rekomendasi nikah", sifat: "Biasa", status: "Terkirim", file: "rekom-nikah.pdf" },
-  { no: "SK-2026-0225", nomor: "005/225/KEC-AH/V/2026", tgl: "21 Mei 2026", asal: "Sekretariat Kecamatan", tujuan: "Seluruh Desa se-Kecamatan Air Hitam", perihal: "Sosialisasi penggunaan DILAN CERDAS", sifat: "Penting", status: "Terkirim", file: "sosialisasi-dilan-cerdas.pdf" },
-];
-
-const PEGAWAI = [
-  { nama: "FATHURRAHMAN, S.STP", nip: "198609102004121002", jabatan: "Camat Air Hitam", gol: "IV/a", unit: "Pimpinan", status: "PNS" },
-  { nama: "ZULKARNAIN, S.E.", nip: "197304052007011025", jabatan: "Sekretaris Kecamatan Air Hitam", gol: "III/d", unit: "Sekretariat", status: "PNS" },
-  { nama: "JIMMI KELLY, S.E.", nip: "197806192008011001", jabatan: "Kasubbag Umum & Kepegawaian", gol: "III/b", unit: "Subbag Umum & Kepegawaian", status: "PNS" },
-  { nama: "USMAN KHOLIQ, S.E.", nip: "197505042009011010", jabatan: "Kasubbag Keuangan, Aset dan Program", gol: "III/b", unit: "Subbag Keuangan, Aset dan Program", status: "PNS" },
-  { nama: "DEDI SANTOSO, S.AP", nip: "198308072012121003", jabatan: "Kasi Pemerintahan", gol: "III/c", unit: "Seksi Pemerintahan", status: "PNS" },
-  { nama: "IBNU SYATIR, S.Pd", nip: "198503292011011006", jabatan: "Kasi PMD dan Kelurahan", gol: "III/d", unit: "Seksi PMD dan Kelurahan", status: "PNS" },
-  { nama: "MUALIMIN, A.Md.Kep", nip: "197605271996031002", jabatan: "Kasi Kesejahteraan Sosial", gol: "III/c", unit: "Seksi Kesejahteraan Sosial", status: "PNS" },
-  { nama: "Ir. MUHAMMAD SYAFA'AT, S.P., M.E., IPM", nip: "197712162006041008", jabatan: "Kasi Pelayanan Umum", gol: "III/d", unit: "Seksi Pelayanan Umum", status: "PNS" },
-  { nama: "SA'ARANI, S.Pd", nip: "198211102008011002", jabatan: "Staf", gol: "-", unit: "Subbag Umum & Kepegawaian", status: "PNS" },
-  { nama: "MISWATI", nip: "198704302025212025", jabatan: "Staf", gol: "-", unit: "Subbag Umum & Kepegawaian", status: "PNS" },
-  { nama: "FITRI ANDANI", nip: "199909092025212014", jabatan: "Staf", gol: "-", unit: "Subbag Umum & Kepegawaian", status: "PNS" },
-  { nama: "AYU LESTARI", nip: "199309162025212018", jabatan: "Staf", gol: "-", unit: "Subbag Umum & Kepegawaian", status: "PNS" },
-  { nama: "NASODIN, S.IP", nip: "19951162025051005", jabatan: "Staf", gol: "-", unit: "Subbag Keuangan, Aset dan Program", status: "PNS" },
-  { nama: "BUSTARI", nip: "199306232025221001", jabatan: "Staf", gol: "-", unit: "Subbag Keuangan, Aset dan Program", status: "PNS" },
-  { nama: "AHMAD ZIADI", nip: "198805262025211090", jabatan: "Staf", gol: "-", unit: "Subbag Keuangan, Aset dan Program", status: "PNS" },
-  { nama: "DAFIT HAYATULLOH AS, A.Md.Kom", nip: "199604262025051001", jabatan: "Staf", gol: "-", unit: "Seksi Pemerintahan", status: "PNS" },
-  { nama: "MUJITO", nip: "197112042009061001", jabatan: "Staf", gol: "-", unit: "Seksi Pemerintahan", status: "PNS" },
-  { nama: "HASIM", nip: "198510202025211021", jabatan: "Staf", gol: "-", unit: "Seksi Pemerintahan", status: "PNS" },
-  { nama: "IDAM KHOLID, S.Pd", nip: "198604152025211018", jabatan: "Staf", gol: "-", unit: "Seksi Pemerintahan", status: "PNS" },
-  { nama: "ABDUL AZIZ", nip: "197211012010011009", jabatan: "Staf", gol: "-", unit: "Seksi PMD dan Kelurahan", status: "PNS" },
-  { nama: "PUJIATI, S.E.", nip: "198703092025212012", jabatan: "Staf", gol: "-", unit: "Seksi PMD dan Kelurahan", status: "PNS" },
-  { nama: "AHMAD NURYADIN", nip: "198305082025211022", jabatan: "Staf", gol: "-", unit: "Seksi PMD dan Kelurahan", status: "PNS" },
-  { nama: "AHMAD DAIROBI", nip: "199003262025211045", jabatan: "Staf", gol: "-", unit: "Seksi PMD dan Kelurahan", status: "PNS" },
-  { nama: "HERMANTO", nip: "197202092009061001", jabatan: "Staf", gol: "-", unit: "Seksi Kesejahteraan Sosial", status: "PNS" },
-  { nama: "EDWAR EFENDI", nip: "1984101092008011001", jabatan: "Staf", gol: "-", unit: "Seksi Kesejahteraan Sosial", status: "PNS" },
-  { nama: "AKLIMA, S.Sos", nip: "198705062025212026", jabatan: "Staf", gol: "-", unit: "Seksi Kesejahteraan Sosial", status: "PNS" },
-  { nama: "SITI AJRAH", nip: "198210092009012006", jabatan: "Staf", gol: "-", unit: "Seksi Pelayanan Umum", status: "PNS" },
-  { nama: "PAHRUL. AB", nip: "197704122012121001", jabatan: "Staf", gol: "-", unit: "Seksi Pelayanan Umum", status: "PNS" },
-  { nama: "SAIJUL", nip: "198009012025211015", jabatan: "Staf", gol: "-", unit: "Seksi Pelayanan Umum", status: "PNS" },
-  { nama: "BENNI KUSNADI", nip: "198508012025211018", jabatan: "Staf", gol: "-", unit: "Seksi Pelayanan Umum", status: "PNS" },
-];
-
-const AKUN = [
-  { nama: "Operator Kantor Camat Air Hitam", user: "kec.airhitam", email: OFFICE.email, role: "Super Admin", unit: "Kantor Camat Air Hitam", aktif: true, last: "31 Mei 2026, 08:14" },
-  { nama: "Operator Desa Lubuk Kepayang", user: "desa.lubuk.kepayang", email: "operator.lubukkepayang@airhitam.id", role: "User", unit: "Desa Lubuk Kepayang", aktif: true, last: "31 Mei 2026, 08:02" },
-  { nama: "Operator Desa Baru", user: "desa.baru", email: "operator.desabaru@airhitam.id", role: "User", unit: "Desa Baru", aktif: true, last: "31 Mei 2026, 07:58" },
-  { nama: "Operator Desa Semurung", user: "desa.semurung", email: "operator.semurung@airhitam.id", role: "User", unit: "Desa Semurung", aktif: true, last: "31 Mei 2026, 07:54" },
-  { nama: "Operator Desa Jernih", user: "desa.jernih", email: "operator.jernih@airhitam.id", role: "User", unit: "Desa Jernih", aktif: true, last: "31 Mei 2026, 07:49" },
-  { nama: "Operator Desa Lubuk Jering", user: "desa.lubuk.jering", email: "operator.lubukjering@airhitam.id", role: "User", unit: "Desa Lubuk Jering", aktif: true, last: "31 Mei 2026, 07:42" },
-  { nama: "Operator Desa Pematang Kabau", user: "desa.pematang.kabau", email: "operator.pematangkabau@airhitam.id", role: "User", unit: "Desa Pematang Kabau", aktif: true, last: "31 Mei 2026, 07:37" },
-  { nama: "Operator Desa Bukit Suban", user: "desa.bukit.suban", email: "operator.bukitsuban@airhitam.id", role: "User", unit: "Desa Bukit Suban", aktif: true, last: "31 Mei 2026, 07:31" },
-  { nama: "Operator Desa Mentawak Baru", user: "desa.mentawak.baru", email: "operator.mentawakbaru@airhitam.id", role: "User", unit: "Desa Mentawak Baru", aktif: true, last: "31 Mei 2026, 07:24" },
-  { nama: "Operator Desa Mentawak Ulu", user: "desa.mentawak.ulu", email: "operator.mentawakulu@airhitam.id", role: "User", unit: "Desa Mentawak Ulu", aktif: true, last: "31 Mei 2026, 07:19" },
-];
-
-const PENGADUAN = [
-  { nama: "Joko Susilo", umur: 41, hp: "0812-3344-5566", alamat: "Desa Jernih, Kecamatan Air Hitam", pesan: "Mohon informasi status surat pengantar perbaikan data KTP yang sudah diajukan melalui desa.", tgl: "30 Mei 2026", status: "Baru" },
-  { nama: "Ratna Sari", umur: 29, hp: "0857-8899-1122", alamat: "Desa Lubuk Kepayang, Kecamatan Air Hitam", pesan: "Terima kasih, proses rekomendasi nikah lebih jelas dan petugasnya ramah.", tgl: "28 Mei 2026", status: "Selesai" },
-  { nama: "Bagus Hermawan", umur: 35, hp: "0813-2211-7788", alamat: "Desa Bukit Suban, Kecamatan Air Hitam", pesan: "Saran: tambahkan pelacakan status surat agar masyarakat tidak perlu datang berulang ke kantor kecamatan.", tgl: "26 Mei 2026", status: "Ditindaklanjuti" },
-];
-
-const SURVEI_UNSUR = [
-  "Persyaratan pelayanan",
-  "Prosedur & kemudahan",
-  "Kecepatan waktu pelayanan",
-  "Kewajaran biaya / tarif",
-  "Kesesuaian hasil layanan",
-  "Kompetensi petugas",
-  "Kesopanan & keramahan",
-  "Sarana & prasarana",
-  "Penanganan pengaduan",
-];
-
-const SURVEI_HASIL = { ikm: 87.4, mutu: "A", responden: 1248, periode: "Triwulan I 2026" };
+const PRIORITY_OPTIONS = ["Biasa", "Penting", "Segera", "Rahasia"];
+const INCOMING_STATUS_OPTIONS = ["Draft", "Baru", "Diproses", "Selesai"];
+const OUTGOING_STATUS_OPTIONS = ["Draft", "Terkirim"];
+const COMPLAINT_STATUS_OPTIONS = ["Baru", "Ditindaklanjuti", "Selesai"];
+const EMPLOYMENT_STATUS_OPTIONS = ["PNS", "PPPK", "Honorer"];
+const ACCOUNT_ROLE_OPTIONS = ["Super Admin", "User"];
 
 const AVATAR_COLORS = ["#3056a8", "#1f7a55", "#9a6b1e", "#7a3e8f", "#1f6f8f", "#9a3344"];
-function avatarColor(s){ let h=0; for(let i=0;i<s.length;i++) h=s.charCodeAt(i)+((h<<5)-h); return AVATAR_COLORS[Math.abs(h)%AVATAR_COLORS.length]; }
-function initials(n){ return n.replace(/[^A-Za-z. ]/g,"").split(" ").filter(w=>w.length>1&&w[0]===w[0].toUpperCase()).slice(0,2).map(w=>w[0]).join("").toUpperCase()||n.slice(0,2).toUpperCase(); }
 
-Object.assign(window, { OFFICE, APP_INFO, SIFAT, JENIS_LAYANAN, SURAT_MASUK, SURAT_KELUAR, PEGAWAI, AKUN, PENGADUAN, SURVEI_UNSUR, SURVEI_HASIL, avatarColor, initials });
+function avatarColor(source) {
+  const text = String(source || "AA");
+  let hash = 0;
+  for (let index = 0; index < text.length; index += 1) {
+    hash = text.charCodeAt(index) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function initials(name) {
+  const value = String(name || "")
+    .replace(/[^A-Za-z. ]/g, "")
+    .split(" ")
+    .filter((part) => part.length > 1 && part[0] === part[0].toUpperCase())
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+  return value || String(name || "AA").slice(0, 2).toUpperCase();
+}
+
+function digitsOnly(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function sanitizeWhatsappNumber(value) {
+  const digits = digitsOnly(value);
+  if (!digits) return "";
+  if (digits.startsWith("62")) return digits;
+  if (digits.startsWith("0")) return "62" + digits.slice(1);
+  return digits;
+}
+
+function formatDateInput(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatDateId(value, options) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return new Intl.DateTimeFormat(
+    "id-ID",
+    options || { day: "2-digit", month: "long", year: "numeric" }
+  ).format(date);
+}
+
+function formatDateTimeId(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function formatNumberId(value, digits) {
+  const numeric = Number(value || 0);
+  return numeric.toLocaleString("id-ID", digits ? {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  } : undefined);
+}
+
+function quarterLabel(dateValue) {
+  const date = dateValue ? new Date(dateValue) : new Date();
+  if (Number.isNaN(date.getTime())) return "-";
+  const quarter = Math.floor(date.getMonth() / 3) + 1;
+  const roman = ["I", "II", "III", "IV"][quarter - 1];
+  return `Triwulan ${roman} ${date.getFullYear()}`;
+}
+
+function arrayFromLines(value) {
+  return String(value || "")
+    .split("\n")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function linesFromArray(items) {
+  return Array.isArray(items) ? items.join("\n") : "";
+}
+
+function ensureArray(value) {
+  if (Array.isArray(value)) return value;
+  if (!value) return [];
+  try {
+    return Array.isArray(JSON.parse(value)) ? JSON.parse(value) : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function ensureObjectArray(value) {
+  return ensureArray(value).filter((item) => item && typeof item === "object");
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      resolve(null);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || "");
+      const base64 = result.includes(",") ? result.split(",").pop() : result;
+      resolve(base64 || null);
+    };
+    reader.onerror = () => reject(reader.error || new Error("Gagal membaca file."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function base64ToBlob(base64, mimeType) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return new Blob([bytes], { type: mimeType || "application/octet-stream" });
+}
+
+function downloadBlob(filename, blob) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+function exportCsv(filename, rows) {
+  const lines = rows.map((row) =>
+    row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")
+  );
+  downloadBlob(filename, new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" }));
+}
+
+function openWindowHtml(title, bodyHtml) {
+  const popup = window.open("", "_blank", "noopener,noreferrer,width=980,height=760");
+  if (!popup) return null;
+  popup.document.write(`<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title}</title>
+  <style>
+    body { font-family: "Plus Jakarta Sans", Arial, sans-serif; margin: 0; padding: 32px; color: #1f2937; background: #f8fafc; }
+    .sheet { max-width: 960px; margin: 0 auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 18px; padding: 28px 30px; box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08); }
+    h1, h2, h3, p { margin: 0; }
+    .meta { display: grid; grid-template-columns: 220px 1fr; gap: 10px 18px; margin-top: 22px; font-size: 14px; }
+    .label { color: #64748b; font-weight: 600; }
+    .value { color: #0f172a; }
+    .section { margin-top: 24px; }
+    .section p { line-height: 1.75; }
+    .actions { margin-top: 26px; display: flex; gap: 10px; }
+    button { border: none; border-radius: 999px; padding: 10px 16px; background: #1d4ed8; color: #fff; font: inherit; cursor: pointer; }
+    .ghost { background: #e2e8f0; color: #0f172a; }
+    iframe, img { max-width: 100%; margin-top: 18px; border-radius: 12px; border: 1px solid #e5e7eb; }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .sheet { box-shadow: none; border: none; max-width: 100%; border-radius: 0; }
+      .actions { display: none; }
+    }
+  </style>
+</head>
+<body>${bodyHtml}</body>
+</html>`);
+  popup.document.close();
+  return popup;
+}
+
+Object.assign(window, {
+  SIFAT,
+  PRIORITY_OPTIONS,
+  INCOMING_STATUS_OPTIONS,
+  OUTGOING_STATUS_OPTIONS,
+  COMPLAINT_STATUS_OPTIONS,
+  EMPLOYMENT_STATUS_OPTIONS,
+  ACCOUNT_ROLE_OPTIONS,
+  avatarColor,
+  initials,
+  digitsOnly,
+  sanitizeWhatsappNumber,
+  formatDateInput,
+  formatDateId,
+  formatDateTimeId,
+  formatNumberId,
+  quarterLabel,
+  arrayFromLines,
+  linesFromArray,
+  ensureArray,
+  ensureObjectArray,
+  fileToBase64,
+  base64ToBlob,
+  downloadBlob,
+  exportCsv,
+  openWindowHtml,
+});

@@ -16,21 +16,27 @@ function SifatBadge({ s }) {
 
 function StatusBadge({ s }) {
   const map = {
-    "Baru": "b-penting", "Diproses": "b-biasa", "Ditindaklanjuti": "b-biasa",
-    "Selesai": "b-ok", "Terkirim": "b-ok", "Draft": "b-draft", "Aktif": "b-ok", "Nonaktif": "b-draft",
+    Baru: "b-penting",
+    Diproses: "b-biasa",
+    Ditindaklanjuti: "b-biasa",
+    Selesai: "b-ok",
+    Terkirim: "b-ok",
+    Draft: "b-draft",
+    Aktif: "b-ok",
+    Nonaktif: "b-draft",
   };
   return <span className={"badge " + (map[s] || "b-biasa")}>{s}</span>;
 }
 
-/* Row action buttons: Baca, Cetak, Edit, Hapus, WA */
-function RowActions({ wa }) {
+function RowActions({ onView, onPrint, onDownload, onWhatsApp, onEdit, onDelete, viewTitle = "Baca", downloadTitle = "Unduh Dokumen" }) {
   return (
     <div className="row gap-2" style={{ justifyContent: "flex-end" }}>
-      <button className="iconbtn" title="Baca"><Icon name="eye" size={16} /></button>
-      <button className="iconbtn" title="Cetak"><Icon name="print" size={16} /></button>
-      {wa && <button className="iconbtn" title="Notifikasi WhatsApp" style={{ color: "var(--ok)" }}><Icon name="whatsapp" size={16} /></button>}
-      <button className="iconbtn" title="Edit"><Icon name="edit" size={16} /></button>
-      <button className="iconbtn danger" title="Hapus"><Icon name="trash" size={16} /></button>
+      {onView && <button type="button" className="iconbtn" title={viewTitle} onClick={onView}><Icon name="eye" size={16} /></button>}
+      {onPrint && <button type="button" className="iconbtn" title="Cetak" onClick={onPrint}><Icon name="print" size={16} /></button>}
+      {onDownload && <button type="button" className="iconbtn" title={downloadTitle} onClick={onDownload}><Icon name="download" size={16} /></button>}
+      {onWhatsApp && <button type="button" className="iconbtn" title="Notifikasi WhatsApp" style={{ color: "var(--ok)" }} onClick={onWhatsApp}><Icon name="whatsapp" size={16} /></button>}
+      {onEdit && <button type="button" className="iconbtn" title="Edit" onClick={onEdit}><Icon name="edit" size={16} /></button>}
+      {onDelete && <button type="button" className="iconbtn danger" title="Hapus" onClick={onDelete}><Icon name="trash" size={16} /></button>}
     </div>
   );
 }
@@ -38,8 +44,8 @@ function RowActions({ wa }) {
 function PageHead({ crumb, title, sub, actions }) {
   return (
     <div className="page-head">
-      {crumb && <div className="crumb">{crumb.map((c, i) => (
-        <React.Fragment key={i}>{i > 0 && <Icon name="chevright" size={12} />}<span>{c}</span></React.Fragment>
+      {crumb && <div className="crumb">{crumb.map((item, index) => (
+        <React.Fragment key={index}>{index > 0 && <Icon name="chevright" size={12} />}<span>{item}</span></React.Fragment>
       ))}</div>}
       <div className="row between center wrap gap-4">
         <div>
@@ -62,21 +68,55 @@ function Field({ label, req, hint, children, full }) {
   );
 }
 
-function Dropzone({ label = "Unggah Dokumen Surat", file }) {
+function Dropzone({ file, onFileChange, onRemove, hint = "PDF, JPG, atau PNG - maksimal 5 MB" }) {
+  const inputRef = useRef(null);
+  const displayName = file?.name || file?.file_name || file || "";
+
+  function chooseFile() {
+    inputRef.current?.click();
+  }
+
   return (
-    <div className="dropzone">
+    <div className="dropzone" style={{ cursor: "pointer" }} onClick={chooseFile}>
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".pdf,.png,.jpg,.jpeg"
+        style={{ display: "none" }}
+        onChange={(event) => {
+          const nextFile = event.target.files?.[0] || null;
+          if (nextFile) onFileChange?.(nextFile);
+          event.target.value = "";
+        }}
+      />
       <div style={{ color: "var(--navy-600)", marginBottom: 8 }}><Icon name="upload" size={26} /></div>
-      {file
-        ? <div className="row gap-2 center" style={{ justifyContent: "center" }}>
-            <Icon name="doc" size={16} /><span style={{ color: "var(--ink)", fontWeight: 600, fontSize: 13.5 }}>{file}</span>
+      {displayName ? (
+        <>
+          <div className="row gap-2 center" style={{ justifyContent: "center", flexWrap: "wrap" }}>
+            <Icon name="doc" size={16} />
+            <span style={{ color: "var(--ink)", fontWeight: 600, fontSize: 13.5 }}>{displayName}</span>
           </div>
-        : <><div style={{ fontWeight: 600, color: "var(--ink-soft)", fontSize: 13.5 }}>Tarik berkas ke sini atau <span style={{ color: "var(--navy-600)" }}>pilih berkas</span></div>
-           <div className="hint" style={{ marginTop: 4 }}>PDF, JPG, atau PNG — maksimal 5 MB</div></>}
+          <div className="row gap-2 center" style={{ justifyContent: "center", marginTop: 12 }}>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={(event) => { event.stopPropagation(); chooseFile(); }}>
+              Ganti File
+            </button>
+            {onRemove && (
+              <button type="button" className="btn btn-ghost btn-sm" style={{ color: "var(--hot)" }} onClick={(event) => { event.stopPropagation(); onRemove(); }}>
+                Hapus File
+              </button>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <div style={{ fontWeight: 600, color: "var(--ink-soft)", fontSize: 13.5 }}>Tarik berkas ke sini atau <span style={{ color: "var(--navy-600)" }}>pilih berkas</span></div>
+          <div className="hint" style={{ marginTop: 4 }}>{hint}</div>
+        </>
+      )}
     </div>
   );
 }
 
-/* WhatsApp notification preview card */
 function WaPreview({ lines }) {
   return (
     <div style={{ background: "oklch(0.95 0.04 155)", border: "1px solid oklch(0.85 0.06 155)", borderRadius: "var(--r)", padding: "14px 16px" }}>
@@ -86,7 +126,7 @@ function WaPreview({ lines }) {
         <span className="badge b-ok" style={{ marginLeft: "auto" }}>Otomatis</span>
       </div>
       <div style={{ background: "#fff", borderRadius: 10, padding: "11px 13px", fontSize: 12.5, lineHeight: 1.6, color: "var(--ink-soft)", boxShadow: "var(--shadow-sm)" }}>
-        {lines.map((l, i) => <div key={i}>{l}</div>)}
+        {lines.map((line, index) => <div key={index}>{line}</div>)}
       </div>
     </div>
   );
@@ -95,41 +135,46 @@ function WaPreview({ lines }) {
 function EmptyHint({ icon, children }) {
   return (
     <div className="col center" style={{ padding: "40px 20px", color: "var(--muted)", textAlign: "center", gap: 10 }}>
-      <Icon name={icon} size={28} /><span style={{ fontSize: 13.5 }}>{children}</span>
+      <Icon name={icon} size={28} />
+      <span style={{ fontSize: 13.5 }}>{children}</span>
     </div>
   );
 }
 
-/* Reusable pagination bar */
 function Pagination({ current = 1, total = 1, onPage }) {
-  const pages = Array.from({ length: Math.min(total, 5) }, (_, i) => i + 1);
+  const pages = Array.from({ length: Math.min(total, 5) }, (_, index) => index + 1);
   return (
     <div className="row between center" style={{ padding: "13px 18px", borderTop: "1px solid var(--line)" }}>
-      <span className="muted" style={{ fontSize: 12.5 }}>
-        Halaman {current} dari {total}
-      </span>
+      <span className="muted" style={{ fontSize: 12.5 }}>Halaman {current} dari {total}</span>
       <div className="pagination">
-        <button className="pg-btn" disabled={current <= 1} onClick={() => onPage?.(current - 1)}>
-          ← Sebelumnya
-        </button>
-        {pages.map(p => (
-          <button key={p} className={"pg-btn " + (p === current ? "active" : "")} onClick={() => onPage?.(p)}>
-            {p}
+        <button type="button" className="pg-btn" disabled={current <= 1} onClick={() => onPage?.(current - 1)}>← Sebelumnya</button>
+        {pages.map((page) => (
+          <button type="button" key={page} className={"pg-btn " + (page === current ? "active" : "")} onClick={() => onPage?.(page)}>
+            {page}
           </button>
         ))}
         {total > 5 && <span style={{ fontSize: 12.5, color: "var(--muted)", padding: "0 4px" }}>…</span>}
-        <button className="pg-btn" disabled={current >= total} onClick={() => onPage?.(current + 1)}>
-          Berikutnya →
-        </button>
+        <button type="button" className="pg-btn" disabled={current >= total} onClick={() => onPage?.(current + 1)}>Berikutnya →</button>
       </div>
     </div>
   );
 }
 
-/* WhatsApp notification toggle banner */
 function WaBanner({ label, hint, on = true, onChange }) {
-  const [active, setActive] = useState(on);
-  function toggle() { setActive(v => { onChange?.(!v); return !v; }); }
+  const [active, setActive] = useState(Boolean(on));
+
+  useEffect(() => {
+    setActive(Boolean(on));
+  }, [on]);
+
+  function toggle() {
+    setActive((value) => {
+      const next = !value;
+      onChange?.(next);
+      return next;
+    });
+  }
+
   return (
     <div className="wa-banner">
       <span style={{ color: "var(--ok)" }}><Icon name="whatsapp" size={20} /></span>
@@ -145,21 +190,43 @@ function WaBanner({ label, hint, on = true, onChange }) {
   );
 }
 
-/* Table footer with count info + pagination */
-function TableFooter({ shown, total, label = "surat", currentPage = 1, totalPages = 1, onPage }) {
-  const from = (currentPage - 1) * shown + 1;
-  const to = Math.min(currentPage * shown, total);
+function InlineNotice({ tone = "info", children }) {
+  const tones = {
+    ok: { bg: "var(--ok-bg)", border: "var(--ok)", color: "var(--ok)" },
+    info: { bg: "var(--navy-50)", border: "var(--navy-100)", color: "var(--navy-700)" },
+    warn: { bg: "oklch(0.98 0.03 92)", border: "var(--warn)", color: "oklch(0.45 0.09 78)" },
+    danger: { bg: "oklch(0.97 0.03 24)", border: "var(--hot)", color: "oklch(0.52 0.16 24)" },
+  };
+  const style = tones[tone] || tones.info;
   return (
-    <Pagination
-      current={currentPage}
-      total={totalPages}
-      onPage={onPage}
-    />
+    <div style={{ padding: "12px 14px", borderRadius: "var(--r)", border: `1px solid ${style.border}`, background: style.bg, color: style.color, fontSize: 12.5, lineHeight: 1.65 }}>
+      {children}
+    </div>
+  );
+}
+
+function LoadingBlock({ label = "Memuat data..." }) {
+  return (
+    <div className="card card-pad" style={{ textAlign: "center", padding: "48px 24px" }}>
+      <div style={{ width: 42, height: 42, borderRadius: "50%", border: "3px solid var(--line)", borderTopColor: "var(--navy-600)", margin: "0 auto 14px", animation: "spin 1s linear infinite" }} />
+      <div style={{ fontWeight: 700, color: "var(--ink)" }}>{label}</div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
   );
 }
 
 Object.assign(window, {
-  Avatar, SifatBadge, StatusBadge, RowActions, PageHead,
-  Field, Dropzone, WaPreview, WaBanner, EmptyHint,
-  Pagination, TableFooter,
+  Avatar,
+  SifatBadge,
+  StatusBadge,
+  RowActions,
+  PageHead,
+  Field,
+  Dropzone,
+  WaPreview,
+  EmptyHint,
+  Pagination,
+  WaBanner,
+  InlineNotice,
+  LoadingBlock,
 });
