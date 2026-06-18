@@ -3,7 +3,7 @@
    ============================================================ */
 
 /* ---------- Navigation model ---------- */
-const ROLES = ["User", "Admin", "Super Admin"];
+const ROLES = ["User", "Super Admin"];
 const NAV = [
   { group: "Utama", items: [
     { id: "dashboard", label: "Dashboard", icon: "dashboard", roles: ROLES },
@@ -18,7 +18,7 @@ const NAV = [
   { group: "Profil & SDM", items: [
     { id: "profil", label: "Profil Kantor", icon: "building", roles: ROLES },
     { id: "struktur", label: "Struktur Organisasi", icon: "sitemap", roles: ROLES },
-    { id: "pegawai", label: "Data Kepegawaian", icon: "idcard", roles: ["Admin", "Super Admin"] },
+    { id: "pegawai", label: "Data Kepegawaian", icon: "idcard", roles: ["Super Admin"] },
   ]},
   { group: "Layanan Publik", items: [
     { id: "pengaduan", label: "Layanan Pengaduan", icon: "megaphone", roles: ROLES, count: "3" },
@@ -45,12 +45,10 @@ const SCREENS = {
 };
 
 const LOGO_SRC = "assets/sarolangun-logo.jpeg";
-
-const ROLE_META = {
-  "User": { icon: "user", color: "var(--info)", bg: "var(--info-bg)", desc: "Input dan cek surat" },
-  "Admin": { icon: "usercog", color: "var(--navy-700)", bg: "var(--navy-100)", desc: "Surat, layanan, dan SDM" },
-  "Super Admin": { icon: "shield", color: "var(--purple)", bg: "var(--purple-bg)", desc: "Akses penuh sistem" },
-};
+function getRoleAccount(role) {
+  const primary = AKUN.find(a => a.role === role && a.aktif) || AKUN.find(a => a.role === role);
+  return primary || AKUN[0];
+}
 
 const PUBLIC_SERVICES = [
   { icon: "idcard", title: "Pengantar Perbaikan Data KTP", desc: "Untuk koreksi atau pembaruan data KTP.", badge: "Administrasi", tone: "public" },
@@ -91,6 +89,8 @@ const PUBLIC_FLOW = [
 /* ---------- Login ---------- */
 function Login({ onLogin, onPublic }) {
   const [role, setRole] = useState("Super Admin");
+  const account = getRoleAccount(role);
+
   return (
     <div className="login-wrap">
       <div className="login-form-side">
@@ -110,7 +110,7 @@ function Login({ onLogin, onPublic }) {
           </div>
 
           <h1 className="login-card-title">Masuk</h1>
-          <p className="login-card-subtitle">Gunakan akun petugas yang terdaftar.</p>
+          <p className="login-card-subtitle">10 akun aktif untuk 9 desa dan 1 kantor camat.</p>
 
           <div className="field" style={{ marginBottom: 14 }}>
             <label>Masuk sebagai</label>
@@ -126,7 +126,7 @@ function Login({ onLogin, onPublic }) {
           <Field label="Nama Pengguna">
             <div className="login-input-shell">
               <span><Icon name="user" size={16} /></span>
-              <input className="input" defaultValue="fathurrahman" />
+              <input key={role + "-user"} className="input" defaultValue={account?.user || ""} />
             </div>
           </Field>
           <div style={{ height: 14 }}></div>
@@ -136,6 +136,9 @@ function Login({ onLogin, onPublic }) {
               <input className="input" type="password" defaultValue="password" />
             </div>
           </Field>
+          <div className="hint" style={{ marginTop: 10 }}>
+            Notifikasi dokumen terhubung ke WhatsApp resmi {OFFICE.waNotifikasiDokumen}.
+          </div>
 
           <div className="login-meta-row">
             <label><input type="checkbox" defaultChecked />Ingat saya</label>
@@ -780,7 +783,7 @@ function PublicLanding({ onLogin, focusSection, onFocusHandled }) {
 
 /* ---------- Sidebar ---------- */
 function Sidebar({ role, screen, go, open, onClose }) {
-  const me = { "User": "SITI AJRAH", "Admin": "ZULKARNAIN, S.E.", "Super Admin": "FATHURRAHMAN, S.STP" }[role];
+  const me = getRoleAccount(role);
   return (
     <>
       {open && <div className="scrim" onClick={onClose}></div>}
@@ -808,10 +811,10 @@ function Sidebar({ role, screen, go, open, onClose }) {
         </nav>
         <div className="side-foot">
           <div className="side-user">
-            <Avatar name={me} size={36} />
+            <Avatar name={me.nama} size={36} />
             <div className="col grow" style={{ minWidth: 0 }}>
-              <span className="nm" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{me}</span>
-              <span className="rl">{role}</span>
+              <span className="nm" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{me.nama}</span>
+              <span className="rl">{me.unit}</span>
             </div>
             <button type="button" className="iconbtn" style={{ color: "oklch(0.7 0.03 256)" }} title="Keluar" onClick={() => go("__logout")}><Icon name="logout" size={17} /></button>
           </div>
@@ -926,7 +929,7 @@ function App() {
 
   const allowed = NAV.flatMap(g => g.items).find(it => it.id === screen && it.roles.includes(role));
   const activeScreen = allowed ? screen : "dashboard";
-  const titleMap = { Admin: "ZULKARNAIN, S.E.", User: "SITI AJRAH", "Super Admin": "FATHURRAHMAN, S.STP" };
+  const activeIdentity = getRoleAccount(role);
 
   return (
     <div className="app">
@@ -934,7 +937,7 @@ function App() {
       <div className="main">
         <header className="topbar">
           <button type="button" className="iconbtn menu-toggle" onClick={() => setSideOpen(true)}><Icon name="menu" size={20} /></button>
-          <div className="searchbar"><Icon name="search" size={16} /><input placeholder="Cari surat, pegawai, nomor agenda…" /></div>
+          <div className="searchbar"><Icon name="search" size={16} /><input placeholder="Cari surat, desa, nomor agenda…" /></div>
           <div className="grow"></div>
           <div className="role-switch" title="Tinjau tampilan tiap peran">
             {ROLES.map(r => <button type="button" key={r} className={role === r ? "on" : ""} onClick={() => setRole(r)}>{r}</button>)}
@@ -943,7 +946,7 @@ function App() {
             <Icon name="bell" size={19} />
             <span style={{ position: "absolute", top: 4, right: 4, width: 7, height: 7, borderRadius: "50%", background: "var(--hot)", border: "1.5px solid #fff" }}></span>
           </button>
-          <Avatar name={titleMap[role]} size={34} />
+          <Avatar name={activeIdentity.nama} size={34} />
         </header>
         <div className="content">
           {SCREENS[activeScreen]({ go, role })}

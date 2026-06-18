@@ -53,14 +53,15 @@ function FormSuratMasuk({ go }) {
             <span key="1">No. Agenda: <b>SM-2026-0149</b></span>,
             <span key="2">Perihal: Undangan Rapat Koordinasi</span>,
             <span key="3">Sifat: <b>Penting</b> · 31 Mei 2026</span>,
-            <span key="4" style={{ color: "var(--muted)" }}>Diteruskan ke disposisi Camat Air Hitam.</span>,
+            <span key="4">WA resmi dokumen: <b>{OFFICE.waNotifikasiDokumen}</b></span>,
+            <span key="5" style={{ color: "var(--muted)" }}>Diteruskan ke disposisi Camat Air Hitam.</span>,
           ]} />
           <div className="card card-pad">
             <div className="eyebrow" style={{ marginBottom: 12 }}>Petunjuk Pengisian</div>
             <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.85 }}>
               <li>Isi sesuai dokumen surat asli yang diterima.</li>
               <li>Nomor agenda dibuat otomatis oleh sistem.</li>
-              <li>Notifikasi WhatsApp dikirim ke pejabat tujuan saat surat dikirim.</li>
+              <li>Notifikasi WhatsApp dokumen masuk dikirim ke nomor resmi kecamatan {OFFICE.waNotifikasiDokumen}.</li>
             </ul>
           </div>
         </>
@@ -107,7 +108,7 @@ function FormSuratMasuk({ go }) {
       </div>
       <WaBanner
         label="Kirim notifikasi WhatsApp"
-        hint="Pejabat tujuan menerima pemberitahuan otomatis."
+        hint={`Ringkasan surat masuk dikirim otomatis ke ${OFFICE.waNotifikasiDokumen}.`}
         on={true}
       />
       <FormActions />
@@ -129,6 +130,7 @@ function FormSuratKeluar({ go }) {
             <span key="1">No. Agenda: <b>SK-2026-0232</b></span>,
             <span key="2">Tujuan: Seluruh Desa se-Kecamatan Air Hitam</span>,
             <span key="3">Sifat: <b>Penting</b> · 31 Mei 2026</span>,
+            <span key="4">WA resmi dokumen: <b>{OFFICE.waNotifikasiDokumen}</b></span>,
           ]} />
           <div className="card card-pad">
             <div className="eyebrow" style={{ marginBottom: 12 }}>Penomoran Otomatis</div>
@@ -179,7 +181,7 @@ function FormSuratKeluar({ go }) {
       </div>
       <WaBanner
         label="Kirim notifikasi WhatsApp"
-        hint="Penerima menerima tautan unduh surat otomatis."
+        hint={`Pemberitahuan surat terbit diteruskan melalui WA resmi ${OFFICE.waNotifikasiDokumen}.`}
         on={true}
       />
       <FormActions />

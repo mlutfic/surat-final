@@ -6,9 +6,10 @@ const OFFICE = {
   nama: "Pemerintah Kecamatan Air Hitam",
   pemda: "Kabupaten Sarolangun",
   alamat: "Padang Lalang, Desa Jernih, Kecamatan Air Hitam, Kabupaten Sarolangun, Provinsi Jambi",
-  telp: "-",
+  telp: "0823 2487 4997",
   email: "kantorcamatairhitam@gmail.com",
   web: "-",
+  waNotifikasiDokumen: "0823 2487 4997",
   kepala: "FATHURRAHMAN, S.STP",
   nip: "198609102004121002",
   jabatanKepala: "Camat Air Hitam",
@@ -127,12 +128,16 @@ const PEGAWAI = [
 ];
 
 const AKUN = [
-  { nama: "FATHURRAHMAN, S.STP", user: "fathurrahman", email: OFFICE.email, role: "Super Admin", unit: "Pimpinan", aktif: true, last: "31 Mei 2026, 08:14" },
-  { nama: "ZULKARNAIN, S.E.", user: "zulkarnain", email: OFFICE.email, role: "Admin", unit: "Sekretariat", aktif: true, last: "31 Mei 2026, 07:52" },
-  { nama: "JIMMI KELLY, S.E.", user: "jimmi.kelly", email: OFFICE.email, role: "Admin", unit: "Subbag Umum & Kepegawaian", aktif: true, last: "31 Mei 2026, 09:03" },
-  { nama: "SITI AJRAH", user: "siti.ajrah", email: OFFICE.email, role: "User", unit: "Seksi Pelayanan Umum", aktif: true, last: "30 Mei 2026, 16:41" },
-  { nama: "DEDI SANTOSO, S.AP", user: "dedi.santoso", email: OFFICE.email, role: "Admin", unit: "Seksi Pemerintahan", aktif: true, last: "31 Mei 2026, 08:30" },
-  { nama: "BENNI KUSNADI", user: "benni.kusnadi", email: OFFICE.email, role: "User", unit: "Seksi Pelayanan Umum", aktif: false, last: "18 Mei 2026, 14:22" },
+  { nama: "Operator Kantor Camat Air Hitam", user: "kec.airhitam", email: OFFICE.email, role: "Super Admin", unit: "Kantor Camat Air Hitam", aktif: true, last: "31 Mei 2026, 08:14" },
+  { nama: "Operator Desa Lubuk Kepayang", user: "desa.lubuk.kepayang", email: "operator.lubukkepayang@airhitam.id", role: "User", unit: "Desa Lubuk Kepayang", aktif: true, last: "31 Mei 2026, 08:02" },
+  { nama: "Operator Desa Baru", user: "desa.baru", email: "operator.desabaru@airhitam.id", role: "User", unit: "Desa Baru", aktif: true, last: "31 Mei 2026, 07:58" },
+  { nama: "Operator Desa Semurung", user: "desa.semurung", email: "operator.semurung@airhitam.id", role: "User", unit: "Desa Semurung", aktif: true, last: "31 Mei 2026, 07:54" },
+  { nama: "Operator Desa Jernih", user: "desa.jernih", email: "operator.jernih@airhitam.id", role: "User", unit: "Desa Jernih", aktif: true, last: "31 Mei 2026, 07:49" },
+  { nama: "Operator Desa Lubuk Jering", user: "desa.lubuk.jering", email: "operator.lubukjering@airhitam.id", role: "User", unit: "Desa Lubuk Jering", aktif: true, last: "31 Mei 2026, 07:42" },
+  { nama: "Operator Desa Pematang Kabau", user: "desa.pematang.kabau", email: "operator.pematangkabau@airhitam.id", role: "User", unit: "Desa Pematang Kabau", aktif: true, last: "31 Mei 2026, 07:37" },
+  { nama: "Operator Desa Bukit Suban", user: "desa.bukit.suban", email: "operator.bukitsuban@airhitam.id", role: "User", unit: "Desa Bukit Suban", aktif: true, last: "31 Mei 2026, 07:31" },
+  { nama: "Operator Desa Mentawak Baru", user: "desa.mentawak.baru", email: "operator.mentawakbaru@airhitam.id", role: "User", unit: "Desa Mentawak Baru", aktif: true, last: "31 Mei 2026, 07:24" },
+  { nama: "Operator Desa Mentawak Ulu", user: "desa.mentawak.ulu", email: "operator.mentawakulu@airhitam.id", role: "User", unit: "Desa Mentawak Ulu", aktif: true, last: "31 Mei 2026, 07:19" },
 ];
 
 const PENGADUAN = [
