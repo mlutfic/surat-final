@@ -59,6 +59,7 @@ function Login({ onSuccess, onPublic }) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const whatsappTarget = office?.whatsapp_notification || "-";
 
   async function submit() {
     setBusy(true);
@@ -76,45 +77,106 @@ function Login({ onSuccess, onPublic }) {
   return (
     <div className="login-wrap">
       <div className="login-form-side">
-        <div className="login-card">
-          <button type="button" className="login-back-link" onClick={() => onPublic?.()}>
-            <Icon name="arrowleft" size={15} /> Landing Page
-          </button>
+        <div className="login-stage">
+          <section className="login-aside">
+            <div className="login-aside-panel">
+              <div className="login-aside-top">
+                <div className="login-brand-lockup">
+                  <span className="login-brand-mark"><img src={office?.logo_url || "assets/sarolangun-logo.jpeg"} alt="" /></span>
+                  <span>
+                    <strong>{office?.app_name || "DILAN CERDAS"}</strong>
+                    <small>{office?.district_name || "Kecamatan Air Hitam"}</small>
+                  </span>
+                </div>
+                <div className="login-aside-badge">
+                  <span className="login-aside-badge-dot"></span>
+                  Data Live Supabase
+                </div>
+              </div>
 
-          <div className="login-card-brand">
-            <div className="login-brand-lockup login-brand-lockup-dark">
-              <span className="login-brand-mark"><img src={office?.logo_url || "assets/sarolangun-logo.jpeg"} alt="" /></span>
-              <span>
-                <strong>{office?.app_name || "DILAN CERDAS"}</strong>
-                <small>{office?.district_name || "Kecamatan Air Hitam"}</small>
-              </span>
+              <div className="login-aside-copy">
+                <p className="login-aside-kicker">Portal Operator Persuratan</p>
+                <h1 className="login-aside-title">Pusat kendali surat dan layanan Kecamatan Air Hitam.</h1>
+                <p className="login-aside-desc">
+                  Operator desa dan kantor camat bekerja pada database yang sama, dengan alur dokumen yang saling terhubung.
+                </p>
+              </div>
+
+              <div className="login-aside-points">
+                <div className="login-aside-point">
+                  <span className="login-aside-icon"><Icon name="inbox" size={18} /></span>
+                  <div>
+                    <strong>Surat Masuk & Keluar</strong>
+                    <p>Agenda, status proses, cetak, dan unduh dokumen dalam satu alur.</p>
+                  </div>
+                </div>
+                <div className="login-aside-point">
+                  <span className="login-aside-icon"><Icon name="shield" size={18} /></span>
+                  <div>
+                    <strong>Akses berbasis akun unit kerja</strong>
+                    <p>Hak akses dibedakan antara operator desa dan kantor camat.</p>
+                  </div>
+                </div>
+                <div className="login-aside-point">
+                  <span className="login-aside-icon"><Icon name="whatsapp" size={18} /></span>
+                  <div>
+                    <strong>Notifikasi WhatsApp terpusat</strong>
+                    <p>Seluruh notifikasi dokumen diarahkan ke nomor resmi {whatsappTarget}.</p>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          </section>
 
-          <h1 className="login-card-title">Masuk</h1>
-          <p className="login-card-subtitle">Masukkan akun operator desa atau akun kantor camat yang sudah tersimpan di Supabase.</p>
+          <section className="login-panel">
+            <div className="login-card">
+              <button type="button" className="login-back-link" onClick={() => onPublic?.()}>
+                <Icon name="arrowleft" size={15} /> Landing Page
+              </button>
 
-          <Field label="Nama Pengguna">
-            <div className="login-input-shell">
-              <span><Icon name="user" size={16} /></span>
-              <input className="input" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="Contoh: desa.jernih" onKeyDown={(event) => { if (event.key === "Enter") submit(); }} />
+              <div className="login-card-brand">
+                <div className="login-brand-lockup login-brand-lockup-dark">
+                  <span className="login-brand-mark"><img src={office?.logo_url || "assets/sarolangun-logo.jpeg"} alt="" /></span>
+                  <span>
+                    <strong>{office?.app_name || "DILAN CERDAS"}</strong>
+                    <small>{office?.district_name || "Kecamatan Air Hitam"}</small>
+                  </span>
+                </div>
+              </div>
+
+              <div className="login-card-head">
+                <p className="login-card-kicker">Akses Operator</p>
+                <h1 className="login-card-title">Masuk</h1>
+                <p className="login-card-subtitle">Masukkan akun operator desa atau akun kantor camat yang sudah tersimpan di database.</p>
+              </div>
+
+              <div className="login-field-stack">
+                <Field label="Nama Pengguna">
+                  <div className="login-input-shell">
+                    <span><Icon name="user" size={16} /></span>
+                    <input className="input" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="Contoh: desa.jernih" onKeyDown={(event) => { if (event.key === "Enter") submit(); }} />
+                  </div>
+                </Field>
+                <Field label="Kata Sandi">
+                  <div className="login-input-shell">
+                    <span><Icon name="lock" size={16} /></span>
+                    <input className="input" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Masukkan password" onKeyDown={(event) => { if (event.key === "Enter") submit(); }} />
+                  </div>
+                </Field>
+              </div>
+
+              <div className="login-info-strip">
+                <Icon name="whatsapp" size={15} />
+                <span>Notifikasi dokumen terhubung ke WhatsApp resmi <b>{whatsappTarget}</b>.</span>
+              </div>
+
+              {error && <div style={{ marginTop: 14 }}><InlineNotice tone="danger">{error}</InlineNotice></div>}
+
+              <button type="button" className="login-submit" disabled={busy} onClick={submit}>
+                {busy ? "Memproses..." : "Masuk"} <Icon name="chevright" size={16} />
+              </button>
             </div>
-          </Field>
-          <div style={{ height: 14 }}></div>
-          <Field label="Kata Sandi">
-            <div className="login-input-shell">
-              <span><Icon name="lock" size={16} /></span>
-              <input className="input" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Masukkan password" onKeyDown={(event) => { if (event.key === "Enter") submit(); }} />
-            </div>
-          </Field>
-          <div className="hint" style={{ marginTop: 10 }}>
-            Notifikasi dokumen terhubung ke WhatsApp resmi {office?.whatsapp_notification || "-"}.
-          </div>
-          {error && <div style={{ marginTop: 12 }}><InlineNotice tone="danger">{error}</InlineNotice></div>}
-
-          <button type="button" className="login-submit" disabled={busy} onClick={submit}>
-            {busy ? "Memproses..." : "Masuk"} <Icon name="chevright" size={16} />
-          </button>
+          </section>
         </div>
       </div>
     </div>
