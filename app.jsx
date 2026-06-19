@@ -53,6 +53,8 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "accent": "#b8842a"
 }/*EDITMODE-END*/;
 
+const SIDEBAR_COLLAPSE_KEY = "dilan-cerdas-sidebar-collapsed-v1";
+
 function Login({ onSuccess, onPublic }) {
   const office = AppSelectors.office();
   const [username, setUsername] = useState("");
@@ -664,7 +666,7 @@ function PublicLanding({ onLogin }) {
   );
 }
 
-function Sidebar({ session, screen, go, open, onClose }) {
+function Sidebar({ session, screen, go, open, onClose, collapsed }) {
   const identity = AppSelectors.currentIdentity();
   const incomingCount = AppSelectors.incomingLetters().length;
   const outgoingCount = AppSelectors.outgoingLetters().length;
@@ -679,10 +681,13 @@ function Sidebar({ session, screen, go, open, onClose }) {
   return (
     <>
       {open && <div className="scrim" onClick={onClose}></div>}
-      <aside className={"sidebar " + (open ? "open" : "")}>
-        <div className="brand">
+      <aside className={"sidebar " + (open ? "open " : "") + (collapsed ? "collapsed" : "")}>
+        <div className="brand" title={office?.app_name || "DILAN CERDAS"}>
           <div className="emblem"><img src={office?.logo_url || "assets/sarolangun-logo.jpeg"} alt="" /></div>
-          <div className="col"><span className="bt">{office?.app_name || "DILAN CERDAS"}</span><span className="bs">{office?.district_name || "Kecamatan Air Hitam"}</span></div>
+          <div className="col brand-copy">
+            <span className="bt">{office?.app_name || "DILAN CERDAS"}</span>
+            <span className="bs">{office?.district_name || "Kecamatan Air Hitam"}</span>
+          </div>
         </div>
         <nav className="nav">
           {NAV.map((group) => {
@@ -692,8 +697,9 @@ function Sidebar({ session, screen, go, open, onClose }) {
               <div key={group.group}>
                 <div className="nav-group-label">{group.group}</div>
                 {items.map((item) => (
-                  <a key={item.id} className={"nav-item " + (screen === item.id ? "active" : "")} onClick={() => { go(item.id); onClose(); }}>
-                    <Icon name={item.icon} size={18} />{item.label}
+                  <a key={item.id} className={"nav-item " + (screen === item.id ? "active" : "")} title={item.label} onClick={() => { go(item.id); onClose(); }}>
+                    <Icon name={item.icon} size={18} />
+                    <span className="nav-label">{item.label}</span>
                     {counts[item.id] ? <span className="nav-count tabnum">{counts[item.id]}</span> : null}
                   </a>
                 ))}
@@ -702,13 +708,13 @@ function Sidebar({ session, screen, go, open, onClose }) {
           })}
         </nav>
         <div className="side-foot">
-          <div className="side-user">
+          <div className="side-user" title={identity?.full_name || session.full_name}>
             <Avatar name={identity?.full_name || session.full_name} size={36} />
-            <div className="col grow" style={{ minWidth: 0 }}>
+            <div className="col grow side-user-copy">
               <span className="nm" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{identity?.full_name || session.full_name}</span>
               <span className="rl">{identity?.unit_name || session.unit_name}</span>
             </div>
-            <button type="button" className="iconbtn" style={{ color: "oklch(0.7 0.03 256)" }} title="Keluar" onClick={() => go("__logout")}><Icon name="logout" size={17} /></button>
+            <button type="button" className="iconbtn side-logout" style={{ color: "oklch(0.7 0.03 256)" }} title="Keluar" onClick={() => go("__logout")}><Icon name="logout" size={17} /></button>
           </div>
         </div>
       </aside>
@@ -731,6 +737,13 @@ function App() {
   const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const [screen, setScreen] = useState("dashboard");
   const [sideOpen, setSideOpen] = useState(false);
+  const [sideCollapsed, setSideCollapsed] = useState(() => {
+    try {
+      return window.localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === "1";
+    } catch (error) {
+      return false;
+    }
+  });
   const [view, setView] = useState(window.location.hash === "#login" ? "login" : "landing");
 
   useEffect(() => {
@@ -745,6 +758,14 @@ function App() {
   useEffect(() => {
     if (tweaks.accent) document.documentElement.style.setProperty("--gold-500", tweaks.accent);
   }, [tweaks.accent]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(SIDEBAR_COLLAPSE_KEY, sideCollapsed ? "1" : "0");
+    } catch (error) {
+      /* ignore storage failure */
+    }
+  }, [sideCollapsed]);
 
   useEffect(() => {
     if (state.session) setView("app");
@@ -805,11 +826,21 @@ function App() {
   const identity = AppSelectors.currentIdentity();
 
   return (
-    <div className="app">
-      <Sidebar session={state.session} screen={activeScreen} go={go} open={sideOpen} onClose={() => setSideOpen(false)} />
+    <div className={"app " + (sideCollapsed ? "sidebar-collapsed" : "")}>
+      <Sidebar session={state.session} screen={activeScreen} go={go} open={sideOpen} onClose={() => setSideOpen(false)} collapsed={sideCollapsed} />
       <div className="main">
         <header className="topbar">
           <button type="button" className="iconbtn menu-toggle" onClick={() => setSideOpen(true)}><Icon name="menu" size={20} /></button>
+          <button
+            type="button"
+            className="iconbtn desktop-sidebar-toggle"
+            title={sideCollapsed ? "Buka sidebar" : "Ciutkan sidebar"}
+            aria-label={sideCollapsed ? "Buka sidebar" : "Ciutkan sidebar"}
+            aria-pressed={sideCollapsed}
+            onClick={() => setSideCollapsed((value) => !value)}
+          >
+            <Icon name={sideCollapsed ? "chevright" : "chevleft"} size={18} />
+          </button>
           <div className="searchbar"><Icon name="search" size={16} /><input readOnly value={`Akun aktif: ${identity?.full_name || state.session.full_name}`} /></div>
           <div className="grow"></div>
           <span className={"badge " + (state.session.role === "Super Admin" ? "b-rahasia" : "b-draft")}>{state.session.role}</span>

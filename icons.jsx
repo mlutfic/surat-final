@@ -25,6 +25,7 @@ const ICONS = {
   filter: "M22 3H2l8 9.46V19l4 2v-8.54z",
   download: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3",
   check: "M20 6 9 17l-5-5",
+  chevleft: "M15 18l-6-6 6-6",
   chevright: "M9 18l6-6-6-6",
   logout: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9",
   shield: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
