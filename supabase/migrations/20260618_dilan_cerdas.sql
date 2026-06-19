@@ -569,10 +569,20 @@ as $$
 declare
   v_actor record;
   v_result jsonb;
+  v_office_id uuid;
 begin
   select * into v_actor from public.require_session(p_session_token) limit 1;
   if v_actor.role <> 'Super Admin' then
     raise exception 'Hanya Super Admin yang dapat mengubah profil kantor.';
+  end if;
+
+  v_office_id := coalesce(
+    nullif(p_payload->>'id', '')::uuid,
+    (select id from public.office_profile order by updated_at desc, id desc limit 1)
+  );
+
+  if v_office_id is null then
+    raise exception 'Profil kantor tidak ditemukan.';
   end if;
 
   update public.office_profile
@@ -603,7 +613,12 @@ begin
          complaint_categories = coalesce(p_payload->'complaint_categories', '[]'::jsonb),
          logo_url = coalesce(p_payload->>'logo_url', logo_url),
          org_pdf_url = coalesce(p_payload->>'org_pdf_url', org_pdf_url)
+   where id = v_office_id
   returning row_to_json(office_profile)::jsonb into v_result;
+
+  if v_result is null then
+    raise exception 'Profil kantor tidak ditemukan atau gagal diperbarui.';
+  end if;
 
   return v_result;
 end;
