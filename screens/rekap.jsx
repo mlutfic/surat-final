@@ -128,8 +128,9 @@ function RekapSuratMasuk({ go }) {
                       onDownload={() => AppApi.downloadLetter("incoming", item.id)}
                       onWhatsApp={() => AppApi.openWhatsapp((office && office.whatsapp_notification) || "", AppApi.waMessageForLetter("incoming", item))}
                       onEdit={() => { AppApi.setFormContext("incoming", item.id); go("form-masuk"); }}
-                      onDelete={() => {
-                        if (window.confirm(`Hapus surat masuk ${item.agenda_no}?`)) AppApi.deleteIncomingLetter(item.id);
+                      onDelete={async () => {
+                        const confirmed = await AppApi.confirmDeletion("surat masuk", `${item.agenda_no || "-"} · ${item.subject || item.letter_no || "-"}`, `Nomor surat: ${item.letter_no || "-"}`);
+                        if (confirmed) AppApi.deleteIncomingLetter(item.id);
                       }}
                     />
                   </td>
@@ -212,8 +213,9 @@ function RekapSuratKeluar({ go }) {
                       onDownload={() => AppApi.downloadLetter("outgoing", item.id)}
                       onWhatsApp={() => AppApi.openWhatsapp((office && office.whatsapp_notification) || "", AppApi.waMessageForLetter("outgoing", item))}
                       onEdit={() => { AppApi.setFormContext("outgoing", item.id); go("form-keluar"); }}
-                      onDelete={() => {
-                        if (window.confirm(`Hapus surat keluar ${item.agenda_no}?`)) AppApi.deleteOutgoingLetter(item.id);
+                      onDelete={async () => {
+                        const confirmed = await AppApi.confirmDeletion("surat keluar", `${item.agenda_no || "-"} · ${item.subject || item.letter_no || "-"}`, `Nomor surat: ${item.letter_no || "-"}`);
+                        if (confirmed) AppApi.deleteOutgoingLetter(item.id);
                       }}
                     />
                   </td>

@@ -5,12 +5,14 @@
 
   let bootPromise = null;
   let noticeTimer = null;
+  let confirmResolver = null;
 
   const store = {
     ready: false,
     loading: false,
     error: null,
     notice: null,
+    confirm: null,
     session: readSession(),
     formContext: null,
     data: emptyData(),
@@ -40,6 +42,7 @@
       loading: store.loading,
       error: store.error,
       notice: store.notice,
+      confirm: store.confirm ? { ...store.confirm } : null,
       session: store.session ? { ...store.session } : null,
       formContext: store.formContext ? { ...store.formContext } : null,
       data: {
@@ -97,6 +100,46 @@
         emit();
       }, 4200);
     }
+  }
+
+  function requestConfirm(options) {
+    if (confirmResolver) {
+      confirmResolver(false);
+      confirmResolver = null;
+    }
+    store.confirm = {
+      title: options?.title || "Konfirmasi",
+      message: options?.message || "Apakah Anda yakin ingin melanjutkan tindakan ini?",
+      itemLabel: options?.itemLabel || "",
+      description: options?.description || "",
+      confirmLabel: options?.confirmLabel || "Yes",
+      cancelLabel: options?.cancelLabel || "No",
+      tone: options?.tone || "danger",
+    };
+    emit();
+    return new Promise((resolve) => {
+      confirmResolver = resolve;
+    });
+  }
+
+  function settleConfirm(accepted) {
+    store.confirm = null;
+    emit();
+    const resolve = confirmResolver;
+    confirmResolver = null;
+    resolve?.(Boolean(accepted));
+  }
+
+  function confirmDeletion(subjectLabel, itemLabel, description) {
+    return requestConfirm({
+      title: "Konfirmasi Hapus",
+      message: `Apakah Anda ingin menghapus ${subjectLabel} ini?`,
+      itemLabel: itemLabel || "-",
+      description: description || "Data yang dihapus tidak dapat dikembalikan.",
+      confirmLabel: "Yes",
+      cancelLabel: "No",
+      tone: "danger",
+    });
   }
 
   async function request(path, options) {
@@ -730,13 +773,37 @@
   }
 
   async function previewLetter(kind, id, printMode) {
-    const record = kind === "incoming" ? await fetchIncomingLetter(id) : await fetchOutgoingLetter(id);
-    if (!record) throw new Error("Dokumen tidak ditemukan.");
-    const popup = openWindowHtml(
-      `${kind === "incoming" ? "Surat Masuk" : "Surat Keluar"} ${record.agenda_no || ""}`,
-      buildLetterSheet(kind, record)
-    );
-    if (printMode && popup) window.setTimeout(() => popup.print(), 450);
+    const title = `${kind === "incoming" ? "Surat Masuk" : "Surat Keluar"} ${id || ""}`;
+    const popup = openWindowHtml(title, `
+      <div class="sheet">
+        <h1>Memuat dokumen...</h1>
+        <p style="margin-top:12px;color:#475569;">Harap tunggu sebentar, data surat sedang disiapkan.</p>
+      </div>
+    `);
+    if (!popup) {
+      setNotice("Browser memblokir popup dokumen. Izinkan popup untuk situs ini lalu coba lagi.", "warn");
+      return;
+    }
+    try {
+      const record = kind === "incoming" ? await fetchIncomingLetter(id) : await fetchOutgoingLetter(id);
+      if (!record) throw new Error("Dokumen tidak ditemukan.");
+      const nextTitle = `${kind === "incoming" ? "Surat Masuk" : "Surat Keluar"} ${record.agenda_no || ""}`;
+      const activePopup = openWindowHtml(nextTitle, buildLetterSheet(kind, record), popup);
+      if (printMode && activePopup) window.setTimeout(() => activePopup.print(), 450);
+    } catch (error) {
+      if (popup && !popup.closed) {
+        openWindowHtml(title, `
+          <div class="sheet">
+            <h1>Dokumen tidak dapat dimuat</h1>
+            <p style="margin-top:12px;color:#475569;">${escapeHtml(error.message || "Terjadi kesalahan saat membuka dokumen.")}</p>
+            <div class="actions">
+              <button class="ghost" onclick="window.close()">Tutup</button>
+            </div>
+          </div>
+        `, popup);
+      }
+      setNotice(error.message || "Gagal memuat dokumen.", "danger");
+    }
   }
 
   async function downloadLetter(kind, id) {
@@ -864,6 +931,9 @@
       downloadLetter,
       downloadDashboardReport,
       exportLetters,
+      requestConfirm,
+      settleConfirm,
+      confirmDeletion,
       openWhatsapp,
       waMessageForLetter,
       letterRecord,

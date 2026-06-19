@@ -101,7 +101,16 @@ function Dropzone({ file, onFileChange, onRemove, hint = "PDF, JPG, atau PNG - m
               Ganti File
             </button>
             {onRemove && (
-              <button type="button" className="btn btn-ghost btn-sm" style={{ color: "var(--hot)" }} onClick={(event) => { event.stopPropagation(); onRemove(); }}>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                style={{ color: "var(--hot)" }}
+                onClick={async (event) => {
+                  event.stopPropagation();
+                  const confirmed = await AppApi.confirmDeletion("lampiran", displayName, "File yang dihapus harus diunggah ulang bila masih dibutuhkan.");
+                  if (confirmed) onRemove();
+                }}
+              >
                 Hapus File
               </button>
             )}
@@ -205,6 +214,35 @@ function InlineNotice({ tone = "info", children }) {
   );
 }
 
+function ConfirmDialog({ open, title, message, itemLabel, description, confirmLabel = "Yes", cancelLabel = "No", tone = "danger", onConfirm, onCancel }) {
+  useEffect(() => {
+    if (!open) return undefined;
+    function handleKeydown(event) {
+      if (event.key === "Escape") onCancel?.();
+    }
+    window.addEventListener("keydown", handleKeydown);
+    return () => window.removeEventListener("keydown", handleKeydown);
+  }, [open, onCancel]);
+
+  if (!open) return null;
+
+  return (
+    <div className="confirm-backdrop" onClick={() => onCancel?.()}>
+      <div className={"confirm-dialog " + (tone === "danger" ? "is-danger" : "")} role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title" onClick={(event) => event.stopPropagation()}>
+        <div className="confirm-kicker">Konfirmasi Tindakan</div>
+        <h3 id="confirm-dialog-title">{title || "Konfirmasi"}</h3>
+        {message && <p className="confirm-message">{message}</p>}
+        {itemLabel && <div className="confirm-target">{itemLabel}</div>}
+        {description && <p className="confirm-description">{description}</p>}
+        <div className="confirm-actions">
+          <button type="button" className="btn btn-ghost" onClick={() => onCancel?.()}>{cancelLabel}</button>
+          <button type="button" className="btn confirm-confirm-btn" onClick={() => onConfirm?.()}>{confirmLabel}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function LoadingBlock({ label = "Memuat data..." }) {
   return (
     <div className="card card-pad" style={{ textAlign: "center", padding: "48px 24px" }}>
@@ -228,5 +266,6 @@ Object.assign(window, {
   Pagination,
   WaBanner,
   InlineNotice,
+  ConfirmDialog,
   LoadingBlock,
 });

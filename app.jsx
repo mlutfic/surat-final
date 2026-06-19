@@ -855,6 +855,18 @@ function App() {
         </div>
       </div>
       <TweakDock tweaks={tweaks} setTweak={setTweak} />
+      <ConfirmDialog
+        open={Boolean(state.confirm)}
+        title={state.confirm?.title}
+        message={state.confirm?.message}
+        itemLabel={state.confirm?.itemLabel}
+        description={state.confirm?.description}
+        confirmLabel={state.confirm?.confirmLabel}
+        cancelLabel={state.confirm?.cancelLabel}
+        tone={state.confirm?.tone}
+        onConfirm={() => AppApi.settleConfirm(true)}
+        onCancel={() => AppApi.settleConfirm(false)}
+      />
     </div>
   );
 }

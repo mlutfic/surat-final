@@ -98,6 +98,21 @@ a { color: inherit; text-decoration: none; }
 .btn-sm { padding: 6px 11px; font-size: 12.5px; border-radius: 6px; }
 .btn-icon { padding: 7px; border-radius: 7px; }
 
+.confirm-confirm-btn {
+  background: var(--navy-700);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+.confirm-confirm-btn:hover {
+  background: var(--navy-800);
+}
+.confirm-dialog.is-danger .confirm-confirm-btn {
+  background: var(--hot);
+}
+.confirm-dialog.is-danger .confirm-confirm-btn:hover {
+  background: oklch(0.54 0.17 28);
+}
+
 /* ---------- Icon button group (table actions) ---------- */
 .iconbtn {
   display: inline-grid; place-items: center;
@@ -106,6 +121,63 @@ a { color: inherit; text-decoration: none; }
 }
 .iconbtn:hover { background: var(--navy-100); color: var(--navy-700); }
 .iconbtn.danger:hover { background: var(--hot-bg); color: var(--hot); }
+
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: oklch(0.18 0.02 256 / 0.45);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+.confirm-dialog {
+  width: min(440px, 100%);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 22px;
+}
+.confirm-kicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--hot);
+  margin-bottom: 10px;
+}
+.confirm-message {
+  margin-top: 10px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  line-height: 1.65;
+}
+.confirm-target {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: var(--r);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.55;
+  word-break: break-word;
+}
+.confirm-description {
+  margin-top: 12px;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
 
 /* ---------- Badges ---------- */
 .badge {

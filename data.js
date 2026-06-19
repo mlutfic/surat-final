@@ -169,9 +169,12 @@ function exportCsv(filename, rows) {
   downloadBlob(filename, new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" }));
 }
 
-function openWindowHtml(title, bodyHtml) {
-  const popup = window.open("", "_blank", "noopener,noreferrer,width=980,height=760");
+function openWindowHtml(title, bodyHtml, existingPopup) {
+  const popup = existingPopup && !existingPopup.closed
+    ? existingPopup
+    : window.open("", "_blank", "noopener,noreferrer,width=980,height=760");
   if (!popup) return null;
+  popup.document.open();
   popup.document.write(`<!DOCTYPE html>
 <html lang="id">
 <head>

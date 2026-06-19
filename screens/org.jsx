@@ -418,7 +418,8 @@ function DataKepegawaian() {
   }
 
   async function removeEmployee(item) {
-    if (!window.confirm(`Hapus data pegawai ${item.full_name}?`)) return;
+    const confirmed = await AppApi.confirmDeletion("data pegawai", `${item.full_name || "-"} · NIP ${item.nip || "-"}`, item.position || "Data pegawai yang dihapus tidak dapat dikembalikan.");
+    if (!confirmed) return;
     try {
       await AppApi.deleteEmployee(item.id);
       setSelectedEmployee((value) => (value?.id === item.id ? null : value));
@@ -673,8 +674,9 @@ function ManajemenAkun() {
                           password: "",
                         });
                       }}
-                      onDelete={() => {
-                        if (window.confirm(`Hapus akun @${item.username}?`)) AppApi.deleteAccount(item.id);
+                      onDelete={async () => {
+                        const confirmed = await AppApi.confirmDeletion("akun", `@${item.username || "-"} · ${item.full_name || "-"}`, item.unit_name || "Akun yang dihapus tidak dapat digunakan lagi untuk login.");
+                        if (confirmed) AppApi.deleteAccount(item.id);
                       }}
                     />
                   </td>

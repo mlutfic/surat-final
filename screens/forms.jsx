@@ -130,16 +130,22 @@ function FormSuratMasuk({ go }) {
   const services = AppSelectors.serviceTypes();
   const allIncoming = AppSelectors.incomingLetters();
   const context = state.formContext;
-  const editingRecord = context?.kind === "incoming" ? AppApi.letterRecord("incoming", context.recordId) : null;
+  const editingRecordId = context?.kind === "incoming" ? context.recordId || "" : "";
+  const editingRecord = editingRecordId ? AppApi.letterRecord("incoming", editingRecordId) : null;
   const [form, setForm] = useState(() => createIncomingForm(session, office));
   const [busy, setBusy] = useState(false);
   const isVillageUser = session?.role === "User";
+  const officeSyncKey = state.data.officeProfile?.updated_at || state.data.officeProfile?.office_name || "";
 
   useEffect(() => {
     if (!office) return;
-    if (editingRecord) setForm(incomingRecordToForm(editingRecord));
-    else setForm(createIncomingForm(session, office));
-  }, [editingRecord, office, session?.id]);
+    if (editingRecordId) {
+      const record = AppApi.letterRecord("incoming", editingRecordId);
+      if (record) setForm(incomingRecordToForm(record));
+      return;
+    }
+    setForm(createIncomingForm(session, office));
+  }, [editingRecordId, officeSyncKey, session?.id]);
 
   if (!office) return <LoadingBlock label="Memuat form surat masuk..." />;
 
@@ -254,11 +260,12 @@ function FormSuratMasuk({ go }) {
           if (form.id) AppApi.printLetter("incoming", form.id);
           else AppApi.setNotice("Simpan surat masuk terlebih dahulu sebelum dicetak.", "warn");
         }}
-        onDelete={() => {
-          if (form.id && window.confirm(`Hapus surat masuk ${form.agenda_no || form.letter_no}?`)) {
-            setBusy(true);
-            AppApi.deleteIncomingLetter(form.id).then(() => go("rekap-masuk")).finally(() => setBusy(false));
-          }
+        onDelete={async () => {
+          if (!form.id) return;
+          const confirmed = await AppApi.confirmDeletion("surat masuk", `${form.agenda_no || "-"} · ${form.subject || form.letter_no || "-"}`, `Nomor surat: ${form.letter_no || "-"}`);
+          if (!confirmed) return;
+          setBusy(true);
+          AppApi.deleteIncomingLetter(form.id).then(() => go("rekap-masuk")).finally(() => setBusy(false));
         }}
       />
       {!allIncoming.length && <div style={{ marginTop: 18 }}><InlineNotice tone="info">Database surat masuk masih kosong. Surat pertama yang Anda simpan akan langsung menjadi sumber data utama rekap dan dashboard.</InlineNotice></div>}
@@ -271,16 +278,22 @@ function FormSuratKeluar({ go }) {
   const session = state.session;
   const office = AppSelectors.office();
   const context = state.formContext;
-  const editingRecord = context?.kind === "outgoing" ? AppApi.letterRecord("outgoing", context.recordId) : null;
+  const editingRecordId = context?.kind === "outgoing" ? context.recordId || "" : "";
+  const editingRecord = editingRecordId ? AppApi.letterRecord("outgoing", editingRecordId) : null;
   const [form, setForm] = useState(() => createOutgoingForm(session, office));
   const [busy, setBusy] = useState(false);
   const isVillageUser = session?.role === "User";
+  const officeSyncKey = state.data.officeProfile?.updated_at || state.data.officeProfile?.office_name || "";
 
   useEffect(() => {
     if (!office) return;
-    if (editingRecord) setForm(outgoingRecordToForm(editingRecord));
-    else setForm(createOutgoingForm(session, office));
-  }, [editingRecord, office, session?.id]);
+    if (editingRecordId) {
+      const record = AppApi.letterRecord("outgoing", editingRecordId);
+      if (record) setForm(outgoingRecordToForm(record));
+      return;
+    }
+    setForm(createOutgoingForm(session, office));
+  }, [editingRecordId, officeSyncKey, session?.id]);
 
   if (!office) return <LoadingBlock label="Memuat form surat keluar..." />;
 
@@ -390,11 +403,12 @@ function FormSuratKeluar({ go }) {
           if (form.id) AppApi.printLetter("outgoing", form.id);
           else AppApi.setNotice("Simpan surat keluar terlebih dahulu sebelum dicetak.", "warn");
         }}
-        onDelete={() => {
-          if (form.id && window.confirm(`Hapus surat keluar ${form.agenda_no || form.letter_no}?`)) {
-            setBusy(true);
-            AppApi.deleteOutgoingLetter(form.id).then(() => go("rekap-keluar")).finally(() => setBusy(false));
-          }
+        onDelete={async () => {
+          if (!form.id) return;
+          const confirmed = await AppApi.confirmDeletion("surat keluar", `${form.agenda_no || "-"} · ${form.subject || form.letter_no || "-"}`, `Nomor surat: ${form.letter_no || "-"}`);
+          if (!confirmed) return;
+          setBusy(true);
+          AppApi.deleteOutgoingLetter(form.id).then(() => go("rekap-keluar")).finally(() => setBusy(false));
         }}
       />
     </FormShell>
