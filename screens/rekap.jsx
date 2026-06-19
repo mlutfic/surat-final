@@ -63,7 +63,8 @@ function RekapSuratMasuk({ go }) {
   const [priority, setPriority] = useState("Semua");
   const [query, setQuery] = useState("");
   const office = AppSelectors.office();
-  const rows = AppSelectors.incomingLetters();
+  const latestRows = AppSelectors.incomingLetters();
+  const rows = AppSelectors.incomingLettersByAgenda();
   const filtered = filterIncomingRows(rows, query, priority);
   const { totalPages, pageRows, safePage } = paginateRows(filtered, page, 8);
 
@@ -86,7 +87,7 @@ function RekapSuratMasuk({ go }) {
         onSearch={(value) => { setQuery(value); setPage(1); }}
         activeFilter={priority}
         onFilterChange={(value) => { setPriority(value); setPage(1); }}
-        dateLabel={quarterLabel(rows[0]?.letter_date)}
+        dateLabel={quarterLabel(latestRows[0]?.letter_date)}
       />
       <div className="card">
         <div className="tbl-wrap">
@@ -150,7 +151,8 @@ function RekapSuratKeluar({ go }) {
   const [priority, setPriority] = useState("Semua");
   const [query, setQuery] = useState("");
   const office = AppSelectors.office();
-  const rows = AppSelectors.outgoingLetters();
+  const latestRows = AppSelectors.outgoingLetters();
+  const rows = AppSelectors.outgoingLettersByAgenda();
   const filtered = filterOutgoingRows(rows, query, priority);
   const { totalPages, pageRows, safePage } = paginateRows(filtered, page, 8);
 
@@ -173,7 +175,7 @@ function RekapSuratKeluar({ go }) {
         onSearch={(value) => { setQuery(value); setPage(1); }}
         activeFilter={priority}
         onFilterChange={(value) => { setPriority(value); setPage(1); }}
-        dateLabel={quarterLabel(rows[0]?.letter_date)}
+        dateLabel={quarterLabel(latestRows[0]?.letter_date)}
       />
       <div className="card">
         <div className="tbl-wrap">

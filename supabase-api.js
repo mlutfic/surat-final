@@ -168,6 +168,23 @@
     });
   }
 
+  function agendaSortValue(record) {
+    const raw = record?.agenda_display_no || record?.agenda_no || "";
+    const numeric = Number.parseInt(String(raw).replace(/\D+/g, ""), 10);
+    return Number.isFinite(numeric) ? numeric : Number.MAX_SAFE_INTEGER;
+  }
+
+  function sortByAgendaAsc(rows) {
+    return rows.slice().sort((left, right) => {
+      const agendaDiff = agendaSortValue(left) - agendaSortValue(right);
+      if (agendaDiff !== 0) return agendaDiff;
+      const leftTime = new Date(left.letter_date || left.created_at || 0).getTime();
+      const rightTime = new Date(right.letter_date || right.created_at || 0).getTime();
+      if (leftTime !== rightTime) return leftTime - rightTime;
+      return String(left.id || "").localeCompare(String(right.id || ""), "id-ID");
+    });
+  }
+
   function agendaOrdinal(index) {
     return String(index + 1).padStart(2, "0");
   }
@@ -776,7 +793,7 @@
 
   function exportLetters(kind) {
     const rows = kind === "incoming"
-      ? scopeBySession(sortByDateDesc(decorateLetterCollection(store.data.incomingLetters), "letter_date"), store.session, "incoming").map((item) => [
+      ? scopeBySession(sortByAgendaAsc(decorateLetterCollection(store.data.incomingLetters)), store.session, "incoming").map((item) => [
           item.agenda_no,
           item.letter_no,
           serviceTypeName(item),
@@ -787,7 +804,7 @@
           item.priority,
           item.status,
         ])
-      : scopeBySession(sortByDateDesc(decorateLetterCollection(store.data.outgoingLetters), "letter_date"), store.session, "outgoing").map((item) => [
+      : scopeBySession(sortByAgendaAsc(decorateLetterCollection(store.data.outgoingLetters)), store.session, "outgoing").map((item) => [
           item.agenda_no,
           item.letter_no,
           item.subject,
@@ -823,8 +840,14 @@
     incomingLetters() {
       return scopeBySession(sortByDateDesc(decorateLetterCollection(store.data.incomingLetters), "letter_date"), store.session, "incoming");
     },
+    incomingLettersByAgenda() {
+      return sortByAgendaAsc(scopeBySession(decorateLetterCollection(store.data.incomingLetters), store.session, "incoming"));
+    },
     outgoingLetters() {
       return scopeBySession(sortByDateDesc(decorateLetterCollection(store.data.outgoingLetters), "letter_date"), store.session, "outgoing");
+    },
+    outgoingLettersByAgenda() {
+      return sortByAgendaAsc(scopeBySession(decorateLetterCollection(store.data.outgoingLetters), store.session, "outgoing"));
     },
     complaints() {
       return sortByDateDesc(store.data.complaints, "created_at");
