@@ -42,7 +42,7 @@ function filterIncomingRows(rows, query, priority) {
   const keyword = String(query || "").trim().toLowerCase();
   return rows.filter((item) => {
     const matchesPriority = priority === "Semua" || item.priority === priority;
-    const haystack = [item.agenda_no, item.letter_no, item.subject, item.source_name, item.target_unit, item.service_types?.name].join(" ").toLowerCase();
+    const haystack = [item.agenda_no, item.agenda_db_no, item.letter_no, item.subject, item.source_name, item.target_unit, item.service_types?.name].join(" ").toLowerCase();
     const matchesQuery = !keyword || haystack.includes(keyword);
     return matchesPriority && matchesQuery;
   });
@@ -52,7 +52,7 @@ function filterOutgoingRows(rows, query, priority) {
   const keyword = String(query || "").trim().toLowerCase();
   return rows.filter((item) => {
     const matchesPriority = priority === "Semua" || item.priority === priority;
-    const haystack = [item.agenda_no, item.letter_no, item.subject, item.source_unit, item.destination_name].join(" ").toLowerCase();
+    const haystack = [item.agenda_no, item.agenda_db_no, item.letter_no, item.subject, item.source_unit, item.destination_name].join(" ").toLowerCase();
     const matchesQuery = !keyword || haystack.includes(keyword);
     return matchesPriority && matchesQuery;
   });

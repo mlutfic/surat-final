@@ -85,8 +85,8 @@ create table if not exists public.employees (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
-create sequence if not exists public.incoming_agenda_seq start 149;
-create sequence if not exists public.outgoing_agenda_seq start 232;
+create sequence if not exists public.incoming_agenda_seq start 9;
+create sequence if not exists public.outgoing_agenda_seq start 8;
 
 create table if not exists public.incoming_letters (
   id uuid primary key default gen_random_uuid(),
@@ -193,11 +193,7 @@ language plpgsql
 as $$
 begin
   if new.agenda_no is null or btrim(new.agenda_no) = '' then
-    new.agenda_no := format(
-      'SM-%s-%s',
-      to_char(coalesce(new.letter_date, current_date), 'YYYY'),
-      lpad(nextval('public.incoming_agenda_seq')::text, 4, '0')
-    );
+    new.agenda_no := lpad(nextval('public.incoming_agenda_seq')::text, 2, '0');
   end if;
   return new;
 end;
@@ -209,11 +205,7 @@ language plpgsql
 as $$
 begin
   if new.agenda_no is null or btrim(new.agenda_no) = '' then
-    new.agenda_no := format(
-      'SK-%s-%s',
-      to_char(coalesce(new.letter_date, current_date), 'YYYY'),
-      lpad(nextval('public.outgoing_agenda_seq')::text, 4, '0')
-    );
+    new.agenda_no := lpad(nextval('public.outgoing_agenda_seq')::text, 2, '0');
   end if;
   return new;
 end;
@@ -1414,35 +1406,35 @@ set
 insert into public.employees (full_name, nip, position, grade, work_unit, employment_status)
 values
   ('FATHURRAHMAN, S.STP', '198609102004121002', 'Camat Air Hitam', 'IV/a', 'Pimpinan', 'PNS'),
-  ('ZULKARNAIN, S.E.', '197304052007011025', 'Sekretaris Kecamatan Air Hitam', 'III/d', 'Sekretariat', 'PNS'),
-  ('JIMMI KELLY, S.E.', '197806192008011001', 'Kasubbag Umum & Kepegawaian', 'III/b', 'Subbag Umum & Kepegawaian', 'PNS'),
-  ('USMAN KHOLIQ, S.E.', '197505042009011010', 'Kasubbag Keuangan, Aset dan Program', 'III/b', 'Subbag Keuangan, Aset dan Program', 'PNS'),
-  ('DEDI SANTOSO, S.AP', '198308072012121003', 'Kasi Pemerintahan', 'III/c', 'Seksi Pemerintahan', 'PNS'),
-  ('IBNU SYATIR, S.Pd', '198503292011011006', 'Kasi PMD dan Kelurahan', 'III/d', 'Seksi PMD dan Kelurahan', 'PNS'),
+  ('ZULKARNAIN, S.E.', '197304052007011025', 'Sekcam Air Hitam', 'III/d', 'Sekretariat', 'PNS'),
+  ('Ir. MUHAMMAD SYAFA''AT, S.P., M.E., IPM, ACPE, ASEAN Eng.', '197712162006041008', 'Kasi Pelayanan Umum', 'III/d', 'Seksi Pelayanan Umum', 'PNS'),
   ('MUALIMIN, A.Md.Kep', '197605271996031002', 'Kasi Kesejahteraan Sosial', 'III/c', 'Seksi Kesejahteraan Sosial', 'PNS'),
-  ('Ir. MUHAMMAD SYAFA''AT, S.P., M.E., IPM', '197712162006041008', 'Kasi Pelayanan Umum', 'III/d', 'Seksi Pelayanan Umum', 'PNS'),
-  ('SA''ARANI, S.Pd', '198211102008011002', 'Staf', '-', 'Subbag Umum & Kepegawaian', 'PNS'),
-  ('MISWATI', '198704302025212025', 'Staf', '-', 'Subbag Umum & Kepegawaian', 'PNS'),
-  ('FITRI ANDANI', '199909092025212014', 'Staf', '-', 'Subbag Umum & Kepegawaian', 'PNS'),
-  ('AYU LESTARI', '199309162025212018', 'Staf', '-', 'Subbag Umum & Kepegawaian', 'PNS'),
-  ('NASODIN, S.IP', '19951162025051005', 'Staf', '-', 'Subbag Keuangan, Aset dan Program', 'PNS'),
-  ('BUSTARI', '199306232025221001', 'Staf', '-', 'Subbag Keuangan, Aset dan Program', 'PNS'),
-  ('AHMAD ZIADI', '198805262025211090', 'Staf', '-', 'Subbag Keuangan, Aset dan Program', 'PNS'),
-  ('DAFIT HAYATULLOH AS, A.Md.Kom', '199604262025051001', 'Staf', '-', 'Seksi Pemerintahan', 'PNS'),
-  ('MUJITO', '197112042009061001', 'Staf', '-', 'Seksi Pemerintahan', 'PNS'),
-  ('HASIM', '198510202025211021', 'Staf', '-', 'Seksi Pemerintahan', 'PNS'),
-  ('IDAM KHOLID, S.Pd', '198604152025211018', 'Staf', '-', 'Seksi Pemerintahan', 'PNS'),
-  ('ABDUL AZIZ', '197211012010011009', 'Staf', '-', 'Seksi PMD dan Kelurahan', 'PNS'),
-  ('PUJIATI, S.E.', '198703092025212012', 'Staf', '-', 'Seksi PMD dan Kelurahan', 'PNS'),
-  ('AHMAD NURYADIN', '198305082025211022', 'Staf', '-', 'Seksi PMD dan Kelurahan', 'PNS'),
-  ('AHMAD DAIROBI', '199003262025211045', 'Staf', '-', 'Seksi PMD dan Kelurahan', 'PNS'),
-  ('HERMANTO', '197202092009061001', 'Staf', '-', 'Seksi Kesejahteraan Sosial', 'PNS'),
+  ('DEDI SANTOSO, S.AP.', '198308072012121003', 'Kasi Pemerintahan', 'III/c', 'Seksi Pemerintahan', 'PNS'),
+  ('IBNU SYATIR, S.Pd', '198503292011011006', 'Kasi PMDK', 'III/d', 'Seksi PMDK', 'PNS'),
+  ('USMAN KHOLIQ, S.E.', '197505042009011010', 'Kasubbag Keuangan, Aset dan Program', 'III/b', 'Subbag Keuangan, Aset dan Program', 'PNS'),
+  ('JIMMI KELLY, S.E.', '197806192008011001', 'Kasubbag Umum dan Kepegawaian', 'III/b', 'Subbag Umum dan Kepegawaian', 'PNS'),
+  ('SA''ARANI', '198211102008011002', 'Staf', '-', 'Subbag Umum dan Kepegawaian', 'PNS'),
   ('EDWAR EFENDI', '1984101092008011001', 'Staf', '-', 'Seksi Kesejahteraan Sosial', 'PNS'),
-  ('AKLIMA, S.Sos', '198705062025212026', 'Staf', '-', 'Seksi Kesejahteraan Sosial', 'PNS'),
   ('SITI AJRAH', '198210092009012006', 'Staf', '-', 'Seksi Pelayanan Umum', 'PNS'),
+  ('NASODIN, S.IP', '199511162025051005', 'Staf', '-', 'Subbag Keuangan, Aset dan Program', 'PNS'),
+  ('HERMANTO', '197202092009061001', 'Staf', '-', 'Seksi Kesejahteraan Sosial', 'PNS'),
+  ('DAPIT HAYATULLOH, A.Md.Kom', '199604262025051001', 'Staf', '-', 'Seksi Pemerintahan', 'PNS'),
+  ('MUJITO', '197112042009061001', 'Staf', '-', 'Seksi Pemerintahan', 'PNS'),
+  ('ABDUL AZIZ', '197211012010011009', 'Staf', '-', 'Seksi PMDK', 'PNS'),
   ('PAHRUL. AB', '197704122012121001', 'Staf', '-', 'Seksi Pelayanan Umum', 'PNS'),
-  ('SAIJUL', '198009012025211015', 'Staf', '-', 'Seksi Pelayanan Umum', 'PNS'),
-  ('BENNI KUSNADI', '198508012025211018', 'Staf', '-', 'Seksi Pelayanan Umum', 'PNS')
+  ('AKLIMA, S.Sos', '198705062025212026', 'Staf', '-', 'Seksi Kesejahteraan Sosial', 'PPPK'),
+  ('PUJIATI, S.E.', '198703092025212012', 'Staf', '-', 'Seksi PMDK', 'PPPK'),
+  ('SAIJUL', '198009012025211015', 'Staf', '-', 'Seksi Pelayanan Umum', 'PPPK'),
+  ('IDAM KHOLID', '198604152025211018', 'Staf', '-', 'Seksi Pemerintahan', 'PPPK'),
+  ('HASIM', '198510202025211021', 'Staf', '-', 'Seksi Pemerintahan', 'PPPK'),
+  ('BENI KUSNADI', '198508012025211018', 'Staf', '-', 'Seksi Pelayanan Umum', 'PPPK'),
+  ('AHMAD NURYADIN', '198305082025211022', 'Staf', '-', 'Seksi PMDK', 'PPPK'),
+  ('MISWATI', '198704302025212025', 'Staf', '-', 'Subbag Umum dan Kepegawaian', 'PPPK'),
+  ('BUSTARI', '199306232025221001', 'Staf', '-', 'Subbag Keuangan, Aset dan Program', 'PPPK'),
+  ('FITRI ANDANI', '199909092025212014', 'Staf', '-', 'Subbag Umum dan Kepegawaian', 'PPPK'),
+  ('AYU LESTARI', '199309162025212018', 'Staf', '-', 'Subbag Umum dan Kepegawaian', 'PPPK'),
+  ('AHMAD ZIADI', '198802262025211090', 'Staf', '-', 'Subbag Keuangan, Aset dan Program', 'PPPK'),
+  ('AHMAD DAIROBI', '199003262025211045', 'Staf', '-', 'Seksi PMDK', 'PPPK')
 on conflict (nip) do update
 set
   full_name = excluded.full_name,
@@ -1472,14 +1464,14 @@ insert into public.incoming_letters (
   created_by_account_id
 )
 values
-  ('SM-2026-0148', '470/148/KEC-AH/VI/2026', '2026-05-31', (select id from svc where name = 'Surat Pengantar Perbaikan Data KTP'), 'Permohonan surat pengantar perbaikan data KTP warga Desa Jernih', 'Desa Jernih', 'Kasi Pelayanan Umum', 'Penting', 'Baru', 'Desa Jernih', '0821-1100-2211', true, 'Masuk melalui operator desa.', 'ca6b7fb0-6065-4dbc-89dd-cd60ecba6d78'),
-  ('SM-2026-0147', '471/147/KEC-AH/V/2026', '2026-05-30', (select id from svc where name = 'Surat Pengantar Perbaikan Data KK / Pemisahan KK'), 'Permohonan perbaikan data Kartu Keluarga', 'Desa Lubuk Kepayang', 'Kasi Pelayanan Umum', 'Segera', 'Diproses', 'Desa Lubuk Kepayang', '0821-8800-1102', true, 'Dokumen masih diverifikasi.', '0f4b373d-7225-4b97-a7dd-15c0a73f2dc0'),
-  ('SM-2026-0146', '300/146/KEC-AH/V/2026', '2026-05-29', (select id from svc where name = 'Surat Rekomendasi Izin Kegiatan / Keramaian'), 'Permohonan rekomendasi izin kegiatan masyarakat', 'Panitia Kegiatan Desa Baru', 'Kasi Trantib', 'Biasa', 'Selesai', 'Desa Baru', '0823-7766-4455', true, 'Sudah diterbitkan surat rekomendasi.', '8a65500e-c493-49e9-ac17-e31a98c470ba'),
-  ('SM-2026-0145', '140/145/KEC-AH/V/2026', '2026-05-28', (select id from svc where name = 'Surat Rekomendasi Penggantian Antar Waktu BPD'), 'Pengajuan rekomendasi PAW BPD', 'BPD Desa Semurung', 'Kasi Pemerintahan', 'Biasa', 'Selesai', 'Desa Semurung', '0822-2233-1144', true, 'Lengkap dan sesuai.', '9d7eae0a-1964-4fc4-b9ad-5a547934eec8'),
-  ('SM-2026-0144', '141/144/KEC-AH/V/2026', '2026-05-27', (select id from svc where name = 'Surat Rekomendasi Rotasi / Pemberhentian / Pengisian / Pelantikan Perangkat Desa'), 'Permohonan rekomendasi pelantikan perangkat desa', 'Pemerintah Desa Bukit Suban', 'Kasi PMD dan Kelurahan', 'Rahasia', 'Diproses', 'Desa Bukit Suban', '0813-9900-2121', true, 'Menunggu paraf pimpinan.', '8561fe99-f4c2-4dda-af54-98bc2fdab7ce'),
-  ('SM-2026-0143', '474/143/KEC-AH/V/2026', '2026-05-26', (select id from svc where name = 'Surat Rekomendasi Nikah'), 'Permohonan rekomendasi nikah', 'Desa Pematang Kabau', 'Kasi Kesejahteraan Sosial', 'Penting', 'Selesai', 'Desa Pematang Kabau', '0812-9922-1188', true, 'Sudah disampaikan ke KUA.', '598418f7-dd15-46c6-b12a-33b3749d6f4b'),
-  ('SM-2026-0142', '470/142/KEC-AH/V/2026', '2026-05-24', (select id from svc where name = 'Lainnya'), 'Permohonan informasi alur layanan DILAN CERDAS', 'Desa Mentawak Baru', 'Sekretariat Kecamatan', 'Segera', 'Selesai', 'Desa Mentawak Baru', '0821-5412-0011', true, 'Telah dijawab melalui WA resmi.', '56be00dd-4714-42bc-95c1-0270d5e2bad5'),
-  ('SM-2026-0141', '005/141/KEC-AH/V/2026', '2026-05-22', (select id from svc where name = 'Lainnya'), 'Undangan koordinasi inovasi pelayanan publik', 'Pemerintah Kabupaten Sarolangun', 'Camat Air Hitam', 'Biasa', 'Selesai', null, '0811-7000-2244', true, 'Arsip pimpinan.', 'f63db293-88d1-4f65-bc2f-68ee8be6ef42')
+  ('08', '470/148/KEC-AH/VI/2026', '2026-05-31', (select id from svc where name = 'Surat Pengantar Perbaikan Data KTP'), 'Permohonan surat pengantar perbaikan data KTP warga Desa Jernih', 'Desa Jernih', 'Kasi Pelayanan Umum', 'Penting', 'Baru', 'Desa Jernih', '0821-1100-2211', true, 'Masuk melalui operator desa.', 'ca6b7fb0-6065-4dbc-89dd-cd60ecba6d78'),
+  ('07', '471/147/KEC-AH/V/2026', '2026-05-30', (select id from svc where name = 'Surat Pengantar Perbaikan Data KK / Pemisahan KK'), 'Permohonan perbaikan data Kartu Keluarga', 'Desa Lubuk Kepayang', 'Kasi Pelayanan Umum', 'Segera', 'Diproses', 'Desa Lubuk Kepayang', '0821-8800-1102', true, 'Dokumen masih diverifikasi.', '0f4b373d-7225-4b97-a7dd-15c0a73f2dc0'),
+  ('06', '300/146/KEC-AH/V/2026', '2026-05-29', (select id from svc where name = 'Surat Rekomendasi Izin Kegiatan / Keramaian'), 'Permohonan rekomendasi izin kegiatan masyarakat', 'Panitia Kegiatan Desa Baru', 'Kasi Trantib', 'Biasa', 'Selesai', 'Desa Baru', '0823-7766-4455', true, 'Sudah diterbitkan surat rekomendasi.', '8a65500e-c493-49e9-ac17-e31a98c470ba'),
+  ('05', '140/145/KEC-AH/V/2026', '2026-05-28', (select id from svc where name = 'Surat Rekomendasi Penggantian Antar Waktu BPD'), 'Pengajuan rekomendasi PAW BPD', 'BPD Desa Semurung', 'Kasi Pemerintahan', 'Biasa', 'Selesai', 'Desa Semurung', '0822-2233-1144', true, 'Lengkap dan sesuai.', '9d7eae0a-1964-4fc4-b9ad-5a547934eec8'),
+  ('04', '141/144/KEC-AH/V/2026', '2026-05-27', (select id from svc where name = 'Surat Rekomendasi Rotasi / Pemberhentian / Pengisian / Pelantikan Perangkat Desa'), 'Permohonan rekomendasi pelantikan perangkat desa', 'Pemerintah Desa Bukit Suban', 'Kasi PMD dan Kelurahan', 'Rahasia', 'Diproses', 'Desa Bukit Suban', '0813-9900-2121', true, 'Menunggu paraf pimpinan.', '8561fe99-f4c2-4dda-af54-98bc2fdab7ce'),
+  ('03', '474/143/KEC-AH/V/2026', '2026-05-26', (select id from svc where name = 'Surat Rekomendasi Nikah'), 'Permohonan rekomendasi nikah', 'Desa Pematang Kabau', 'Kasi Kesejahteraan Sosial', 'Penting', 'Selesai', 'Desa Pematang Kabau', '0812-9922-1188', true, 'Sudah disampaikan ke KUA.', '598418f7-dd15-46c6-b12a-33b3749d6f4b'),
+  ('02', '470/142/KEC-AH/V/2026', '2026-05-24', (select id from svc where name = 'Lainnya'), 'Permohonan informasi alur layanan DILAN CERDAS', 'Desa Mentawak Baru', 'Sekretariat Kecamatan', 'Segera', 'Selesai', 'Desa Mentawak Baru', '0821-5412-0011', true, 'Telah dijawab melalui WA resmi.', '56be00dd-4714-42bc-95c1-0270d5e2bad5'),
+  ('01', '005/141/KEC-AH/V/2026', '2026-05-22', (select id from svc where name = 'Lainnya'), 'Undangan koordinasi inovasi pelayanan publik', 'Pemerintah Kabupaten Sarolangun', 'Camat Air Hitam', 'Biasa', 'Selesai', null, '0811-7000-2244', true, 'Arsip pimpinan.', 'f63db293-88d1-4f65-bc2f-68ee8be6ef42')
 on conflict (agenda_no) do update
 set
   letter_no = excluded.letter_no,
@@ -1513,13 +1505,13 @@ insert into public.outgoing_letters (
   created_by_account_id
 )
 values
-  ('SK-2026-0231', '470/231/KEC-AH/VI/2026', '2026-05-31', 'Kasi Pelayanan Umum', 'Desa Jernih', '470 - Administrasi Kependudukan', 'Surat pengantar perbaikan data KTP', 'Penting', 'Terkirim', 'Desa Jernih', true, 'Dikirim ke desa asal.', 'f63db293-88d1-4f65-bc2f-68ee8be6ef42'),
-  ('SK-2026-0230', '471/230/KEC-AH/V/2026', '2026-05-30', 'Kasi Pelayanan Umum', 'Dinas Dukcapil Kabupaten Sarolangun', '471 - Kependudukan', 'Pengantar perbaikan data Kartu Keluarga', 'Biasa', 'Terkirim', 'Desa Lubuk Kepayang', true, 'Teruskan ke Dukcapil.', 'f63db293-88d1-4f65-bc2f-68ee8be6ef42'),
-  ('SK-2026-0229', '300/229/KEC-AH/V/2026', '2026-05-29', 'Kasi Trantib', 'Panitia Kegiatan Desa Baru', '300 - Ketertiban', 'Rekomendasi izin kegiatan/keramaian', 'Segera', 'Terkirim', 'Desa Baru', true, 'Ditandatangani Camat.', 'f63db293-88d1-4f65-bc2f-68ee8be6ef42'),
-  ('SK-2026-0228', '140/228/KEC-AH/V/2026', '2026-05-27', 'Kasi Pemerintahan', 'BPD Desa Semurung', '140 - Pemerintahan Desa', 'Rekomendasi penggantian antar waktu BPD', 'Rahasia', 'Draft', 'Desa Semurung', true, 'Masih menunggu finalisasi.', 'f63db293-88d1-4f65-bc2f-68ee8be6ef42'),
-  ('SK-2026-0227', '141/227/KEC-AH/V/2026', '2026-05-26', 'Kasi PMD dan Kelurahan', 'Kepala Desa Bukit Suban', '141 - Perangkat Desa', 'Rekomendasi pelantikan perangkat desa', 'Penting', 'Terkirim', 'Desa Bukit Suban', true, 'Dikirim ke desa.', 'f63db293-88d1-4f65-bc2f-68ee8be6ef42'),
-  ('SK-2026-0226', '474/226/KEC-AH/V/2026', '2026-05-23', 'Kasi Kesejahteraan Sosial', 'KUA Kecamatan Air Hitam', '474 - Sosial', 'Rekomendasi nikah', 'Biasa', 'Terkirim', 'Desa Pematang Kabau', true, 'Sudah lengkap.', 'f63db293-88d1-4f65-bc2f-68ee8be6ef42'),
-  ('SK-2026-0225', '005/225/KEC-AH/V/2026', '2026-05-21', 'Sekretariat Kecamatan', 'Seluruh Desa se-Kecamatan Air Hitam', '005 - Undangan', 'Sosialisasi penggunaan DILAN CERDAS', 'Penting', 'Terkirim', null, true, 'Edaran umum kecamatan.', 'f63db293-88d1-4f65-bc2f-68ee8be6ef42')
+  ('07', '470/231/KEC-AH/VI/2026', '2026-05-31', 'Kasi Pelayanan Umum', 'Desa Jernih', '470 - Administrasi Kependudukan', 'Surat pengantar perbaikan data KTP', 'Penting', 'Terkirim', 'Desa Jernih', true, 'Dikirim ke desa asal.', 'f63db293-88d1-4f65-bc2f-68ee8be6ef42'),
+  ('06', '471/230/KEC-AH/V/2026', '2026-05-30', 'Kasi Pelayanan Umum', 'Dinas Dukcapil Kabupaten Sarolangun', '471 - Kependudukan', 'Pengantar perbaikan data Kartu Keluarga', 'Biasa', 'Terkirim', 'Desa Lubuk Kepayang', true, 'Teruskan ke Dukcapil.', 'f63db293-88d1-4f65-bc2f-68ee8be6ef42'),
+  ('05', '300/229/KEC-AH/V/2026', '2026-05-29', 'Kasi Trantib', 'Panitia Kegiatan Desa Baru', '300 - Ketertiban', 'Rekomendasi izin kegiatan/keramaian', 'Segera', 'Terkirim', 'Desa Baru', true, 'Ditandatangani Camat.', 'f63db293-88d1-4f65-bc2f-68ee8be6ef42'),
+  ('04', '140/228/KEC-AH/V/2026', '2026-05-27', 'Kasi Pemerintahan', 'BPD Desa Semurung', '140 - Pemerintahan Desa', 'Rekomendasi penggantian antar waktu BPD', 'Rahasia', 'Draft', 'Desa Semurung', true, 'Masih menunggu finalisasi.', 'f63db293-88d1-4f65-bc2f-68ee8be6ef42'),
+  ('03', '141/227/KEC-AH/V/2026', '2026-05-26', 'Kasi PMD dan Kelurahan', 'Kepala Desa Bukit Suban', '141 - Perangkat Desa', 'Rekomendasi pelantikan perangkat desa', 'Penting', 'Terkirim', 'Desa Bukit Suban', true, 'Dikirim ke desa.', 'f63db293-88d1-4f65-bc2f-68ee8be6ef42'),
+  ('02', '474/226/KEC-AH/V/2026', '2026-05-23', 'Kasi Kesejahteraan Sosial', 'KUA Kecamatan Air Hitam', '474 - Sosial', 'Rekomendasi nikah', 'Biasa', 'Terkirim', 'Desa Pematang Kabau', true, 'Sudah lengkap.', 'f63db293-88d1-4f65-bc2f-68ee8be6ef42'),
+  ('01', '005/225/KEC-AH/V/2026', '2026-05-21', 'Sekretariat Kecamatan', 'Seluruh Desa se-Kecamatan Air Hitam', '005 - Undangan', 'Sosialisasi penggunaan DILAN CERDAS', 'Penting', 'Terkirim', null, true, 'Edaran umum kecamatan.', 'f63db293-88d1-4f65-bc2f-68ee8be6ef42')
 on conflict (agenda_no) do update
 set
   letter_no = excluded.letter_no,

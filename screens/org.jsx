@@ -226,6 +226,110 @@ function EmployeeEditor({ form, setForm, onSave, onCancel, busy }) {
   );
 }
 
+const EMPLOYEE_POSITION_ORDER = {
+  "camat air hitam": 0,
+  "sekcam air hitam": 1,
+  "sekretaris kecamatan air hitam": 1,
+  "kasi pelayanan umum": 2,
+  "kasi kesejahteraan sosial": 3,
+  "kasi pemerintahan": 4,
+  "kasi pmdk": 5,
+  "kasi pmd dan kelurahan": 5,
+  "kasubbag keuangan, aset dan program": 6,
+  "kasubbag umum dan kepegawaian": 7,
+  "kasubbag umum & kepegawaian": 7,
+  "staf": 8,
+};
+
+function employeeStatusBadgeClass(status) {
+  if (status === "PNS") return "b-ok";
+  if (status === "PPPK") return "b-biasa";
+  return "b-draft";
+}
+
+function employeeStatusLabel(status) {
+  if (status === "PNS") return "Pegawai Negeri Sipil (PNS)";
+  if (status === "PPPK") return "Pegawai Pemerintah dengan Perjanjian Kerja (PPPK)";
+  return "Tenaga Honorer";
+}
+
+function sortEmployees(left, right) {
+  const leftPosition = String(left.position || "").trim().toLowerCase();
+  const rightPosition = String(right.position || "").trim().toLowerCase();
+  const leftRank = EMPLOYEE_POSITION_ORDER[leftPosition] ?? 99;
+  const rightRank = EMPLOYEE_POSITION_ORDER[rightPosition] ?? 99;
+  if (leftRank !== rightRank) return leftRank - rightRank;
+
+  const unitCompare = String(left.work_unit || "").localeCompare(String(right.work_unit || ""), "id-ID");
+  if (unitCompare !== 0) return unitCompare;
+
+  return String(left.full_name || "").localeCompare(String(right.full_name || ""), "id-ID");
+}
+
+function EmployeeTableSection({ status, items, onEdit, onDelete }) {
+  return (
+    <div className="card" style={{ marginTop: 18 }}>
+      <div className="card-pad" style={{ paddingBottom: 14 }}>
+        <div className="eyebrow" style={{ marginBottom: 8 }}>{status}</div>
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-end", gap: 12 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 17 }}>{employeeStatusLabel(status)}</h3>
+            <p className="muted" style={{ margin: "6px 0 0", fontSize: 12.5 }}>
+              {items.length} pegawai tercatat pada kelompok {status}.
+            </p>
+          </div>
+          <span className={"badge " + employeeStatusBadgeClass(status)}>{status}</span>
+        </div>
+      </div>
+      <div className="tbl-wrap">
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th>Nama / Jabatan</th>
+              <th>NIP</th>
+              <th>Gol.</th>
+              <th>Unit Kerja</th>
+              <th>Status</th>
+              <th style={{ textAlign: "right" }}>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => (
+              <tr key={item.id}>
+                <td>
+                  <div className="row gap-3 center">
+                    <Avatar name={item.full_name} size={36} />
+                    <div>
+                      <div className="td-strong">{item.full_name}</div>
+                      <div className="muted" style={{ fontSize: 12, marginTop: 1 }}>{item.position}</div>
+                    </div>
+                  </div>
+                </td>
+                <td className="tabnum" style={{ fontSize: 12.5 }}>{item.nip}</td>
+                <td className="tabnum">{item.grade}</td>
+                <td>{item.work_unit}</td>
+                <td>
+                  <span className={"badge " + employeeStatusBadgeClass(item.employment_status)}>
+                    {item.employment_status}
+                  </span>
+                </td>
+                <td>
+                  <RowActions
+                    onView={() => AppApi.setNotice(`Pegawai: ${item.full_name} · ${item.position}`, "info")}
+                    onEdit={() => onEdit(item)}
+                    onDelete={() => onDelete(item)}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {items.length === 0 && <EmptyHint icon="users">Tidak ada pegawai pada kelompok {status}.</EmptyHint>}
+    </div>
+  );
+}
+
 function DataKepegawaian() {
   const [filter, setFilter] = useState("Semua");
   const [query, setQuery] = useState("");
@@ -242,12 +346,27 @@ function DataKepegawaian() {
   const [editing, setEditing] = useState(false);
   const employees = AppSelectors.employees();
 
-  const filtered = employees.filter((item) => {
-    const matchesFilter = filter === "Semua" || item.employment_status === filter;
+  const counts = employees.reduce((carry, item) => {
+    carry[item.employment_status] = (carry[item.employment_status] || 0) + 1;
+    return carry;
+  }, {});
+
+  const searched = employees.filter((item) => {
     const keyword = query.trim().toLowerCase();
     const haystack = [item.full_name, item.nip, item.position, item.work_unit].join(" ").toLowerCase();
-    return matchesFilter && (!keyword || haystack.includes(keyword));
-  });
+    return !keyword || haystack.includes(keyword);
+  }).slice().sort(sortEmployees);
+
+  const visibleStatuses = filter === "Semua"
+    ? EMPLOYMENT_STATUS_OPTIONS.filter((status) => searched.some((item) => item.employment_status === status))
+    : [filter];
+
+  const grouped = visibleStatuses.map((status) => ({
+    status,
+    items: searched.filter((item) => item.employment_status === status),
+  }));
+
+  const visibleCount = grouped.reduce((sum, section) => sum + section.items.length, 0);
 
   async function save() {
     setBusy(true);
@@ -267,7 +386,7 @@ function DataKepegawaian() {
       <PageHead
         crumb={["Profil", "Data Kepegawaian"]}
         title="Data Kepegawaian"
-        sub={`${employees.length} pegawai terdaftar`}
+        sub={`${employees.length} pegawai terdaftar · ${counts.PNS || 0} PNS · ${counts.PPPK || 0} PPPK`}
         actions={
           <button type="button" className="btn btn-primary" onClick={() => { setEditing(true); setForm({ id: "", full_name: "", nip: "", position: "", grade: "-", work_unit: "", employment_status: "PNS" }); }}>
             <Icon name="plus" size={15} />Tambah Pegawai
@@ -275,6 +394,26 @@ function DataKepegawaian() {
         }
       />
       {editing && <EmployeeEditor form={form} setForm={setForm} busy={busy} onSave={save} onCancel={() => setEditing(false)} />}
+      <div className="stat-grid" style={{ marginBottom: 18, gridTemplateColumns: "repeat(3, 1fr)" }}>
+        <div className="stat">
+          <div className="si" style={{ background: "var(--info-bg)", color: "var(--info)" }}><Icon name="users" size={20} /></div>
+          <div className="sv">{employees.length}</div><div className="sl">Total Pegawai</div>
+        </div>
+        <div className="stat">
+          <div className="si" style={{ background: "var(--ok-bg)", color: "var(--ok)" }}><Icon name="shield" size={20} /></div>
+          <div className="sv">{counts.PNS || 0}</div><div className="sl">PNS</div>
+        </div>
+        <div className="stat">
+          <div className="si" style={{ background: "var(--warn-bg)", color: "var(--warn)" }}><Icon name="idcard" size={20} /></div>
+          <div className="sv">{counts.PPPK || 0}</div><div className="sl">PPPK</div>
+        </div>
+      </div>
+      <div className="card card-pad" style={{ marginBottom: 20 }}>
+        <div className="eyebrow" style={{ marginBottom: 8 }}>Pemisahan Status ASN</div>
+        <p className="muted" style={{ margin: 0, fontSize: 12.5, lineHeight: 1.7 }}>
+          Data pegawai kini dipisahkan per kelompok status kepegawaian agar verifikasi daftar PNS dan PPPK lebih mudah mengikuti data resmi Kantor Camat Air Hitam.
+        </p>
+      </div>
       <div className="toolbar">
         <div className="searchbar" style={{ maxWidth: 280, flex: "0 0 auto" }}>
           <Icon name="search" size={16} />
@@ -284,55 +423,18 @@ function DataKepegawaian() {
           <button key={item} type="button" className={"chip " + (filter === item ? "on" : "")} onClick={() => setFilter(item)}>{item}</button>
         ))}
       </div>
-      <div className="card">
-        <div className="tbl-wrap">
-          <table className="tbl">
-            <thead>
-              <tr>
-                <th>Nama / Jabatan</th>
-                <th>NIP</th>
-                <th>Gol.</th>
-                <th>Unit Kerja</th>
-                <th>Status</th>
-                <th style={{ textAlign: "right" }}>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((item) => (
-                <tr key={item.id}>
-                  <td>
-                    <div className="row gap-3 center">
-                      <Avatar name={item.full_name} size={36} />
-                      <div>
-                        <div className="td-strong">{item.full_name}</div>
-                        <div className="muted" style={{ fontSize: 12, marginTop: 1 }}>{item.position}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="tabnum" style={{ fontSize: 12.5 }}>{item.nip}</td>
-                  <td className="tabnum">{item.grade}</td>
-                  <td>{item.work_unit}</td>
-                  <td>
-                    <span className={"badge " + (item.employment_status === "PNS" ? "b-ok" : item.employment_status === "PPPK" ? "b-biasa" : "b-draft")}>
-                      {item.employment_status}
-                    </span>
-                  </td>
-                  <td>
-                    <RowActions
-                      onView={() => AppApi.setNotice(`Pegawai: ${item.full_name} · ${item.position}`, "info")}
-                      onEdit={() => { setEditing(true); setForm({ ...item }); }}
-                      onDelete={() => {
-                        if (window.confirm(`Hapus data pegawai ${item.full_name}?`)) AppApi.deleteEmployee(item.id);
-                      }}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {filtered.length === 0 && <EmptyHint icon="users">Tidak ada pegawai dengan filter yang dipilih.</EmptyHint>}
-      </div>
+      {grouped.map((section) => (
+        <EmployeeTableSection
+          key={section.status}
+          status={section.status}
+          items={section.items}
+          onEdit={(item) => { setEditing(true); setForm({ ...item }); }}
+          onDelete={(item) => {
+            if (window.confirm(`Hapus data pegawai ${item.full_name}?`)) AppApi.deleteEmployee(item.id);
+          }}
+        />
+      ))}
+      {visibleCount === 0 && grouped.length === 0 && <EmptyHint icon="users">Tidak ada pegawai dengan filter yang dipilih.</EmptyHint>}
     </>
   );
 }

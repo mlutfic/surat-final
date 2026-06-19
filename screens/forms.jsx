@@ -179,7 +179,7 @@ function FormSuratMasuk({ go }) {
           <div className="card card-pad">
             <div className="eyebrow" style={{ marginBottom: 12 }}>Petunjuk Pengisian</div>
             <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.85 }}>
-              <li>Nomor agenda surat masuk dibuat otomatis oleh database saat data pertama kali disimpan.</li>
+              <li>Nomor agenda surat masuk dibuat otomatis oleh database sebagai nomor urut surat masuk.</li>
               <li>Operator desa hanya dapat mencatat surat dari unit desanya sendiri agar alur lebih konsisten.</li>
               <li>Unduh dan cetak akan aktif penuh setelah surat tersimpan.</li>
             </ul>
@@ -319,7 +319,7 @@ function FormSuratKeluar({ go }) {
           <div className="card card-pad">
             <div className="eyebrow" style={{ marginBottom: 12 }}>Penomoran Otomatis</div>
             <p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.75, margin: 0 }}>
-              Nomor agenda surat keluar akan ditetapkan otomatis oleh database saat surat disimpan pertama kali.
+              Nomor agenda surat keluar akan ditetapkan otomatis oleh database sebagai nomor urut surat keluar.
             </p>
           </div>
         </>

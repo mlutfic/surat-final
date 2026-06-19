@@ -156,6 +156,55 @@
     });
   }
 
+  function sortByDateAsc(rows, field) {
+    return rows.slice().sort((left, right) => {
+      const leftTime = new Date(left[field] || left.created_at || 0).getTime();
+      const rightTime = new Date(right[field] || right.created_at || 0).getTime();
+      if (leftTime !== rightTime) return leftTime - rightTime;
+      const leftCreated = new Date(left.created_at || 0).getTime();
+      const rightCreated = new Date(right.created_at || 0).getTime();
+      if (leftCreated !== rightCreated) return leftCreated - rightCreated;
+      return String(left.id || "").localeCompare(String(right.id || ""), "id-ID");
+    });
+  }
+
+  function agendaOrdinal(index) {
+    return String(index + 1).padStart(2, "0");
+  }
+
+  function decorateLetterCollection(rows) {
+    const ordered = sortByDateAsc(rows, "letter_date");
+    const agendaMap = new Map(ordered.map((item, index) => [item.id, agendaOrdinal(index)]));
+    return rows.map((item) => {
+      const displayAgenda = agendaMap.get(item.id) || item.agenda_no || "-";
+      return {
+        ...item,
+        agenda_db_no: item.agenda_no || "",
+        agenda_display_no: displayAgenda,
+        agenda_no: displayAgenda,
+      };
+    });
+  }
+
+  function decorateLetterRecord(kind, record) {
+    if (!record) return null;
+    const sourceRows = kind === "incoming" ? store.data.incomingLetters : store.data.outgoingLetters;
+    const matched = decorateLetterCollection(sourceRows).find((item) => item.id === record.id);
+    if (!matched) {
+      return {
+        ...record,
+        agenda_db_no: record.agenda_no || "",
+        agenda_display_no: record.agenda_no || "-",
+      };
+    }
+    return {
+      ...record,
+      agenda_db_no: record.agenda_no || matched.agenda_db_no || "",
+      agenda_display_no: matched.agenda_display_no || matched.agenda_no || "-",
+      agenda_no: matched.agenda_no || record.agenda_no || "-",
+    };
+  }
+
   function scopeBySession(rows, session, kind) {
     if (!session || session.role === "Super Admin") return rows.slice();
     return rows.filter((row) => {
@@ -309,8 +358,8 @@
   }
 
   function dashboardModel() {
-    const incoming = scopeBySession(store.data.incomingLetters, store.session, "incoming");
-    const outgoing = scopeBySession(store.data.outgoingLetters, store.session, "outgoing");
+    const incoming = scopeBySession(sortByDateDesc(decorateLetterCollection(store.data.incomingLetters), "letter_date"), store.session, "incoming");
+    const outgoing = scopeBySession(sortByDateDesc(decorateLetterCollection(store.data.outgoingLetters), "letter_date"), store.session, "outgoing");
     const complaints = sortByDateDesc(store.data.complaints, "created_at");
     const byPriority = PRIORITY_OPTIONS.map((label) => ({
       label,
@@ -564,15 +613,19 @@
   }
 
   async function fetchIncomingLetter(id) {
-    return rpc("get_incoming_letter", { p_session_token: store.session?.token, p_letter_id: id });
+    const record = await rpc("get_incoming_letter", { p_session_token: store.session?.token, p_letter_id: id });
+    return decorateLetterRecord("incoming", record);
   }
 
   async function fetchOutgoingLetter(id) {
-    return rpc("get_outgoing_letter", { p_session_token: store.session?.token, p_letter_id: id });
+    const record = await rpc("get_outgoing_letter", { p_session_token: store.session?.token, p_letter_id: id });
+    return decorateLetterRecord("outgoing", record);
   }
 
   function letterRecord(kind, id) {
-    const collection = kind === "incoming" ? store.data.incomingLetters : store.data.outgoingLetters;
+    const collection = kind === "incoming"
+      ? decorateLetterCollection(store.data.incomingLetters)
+      : decorateLetterCollection(store.data.outgoingLetters);
     return collection.find((item) => item.id === id) || null;
   }
 
@@ -702,7 +755,8 @@
       setNotice(`Dokumen ${record.file_name} berhasil diunduh.`, "ok");
       return;
     }
-    downloadBlob(`${record.agenda_no || "surat"}.html`, new Blob([buildLetterSheet(kind, record)], { type: "text/html;charset=utf-8" }));
+    const fallbackName = `${kind === "incoming" ? "surat-masuk" : "surat-keluar"}-${record.agenda_no || "draft"}.html`;
+    downloadBlob(fallbackName, new Blob([buildLetterSheet(kind, record)], { type: "text/html;charset=utf-8" }));
     setNotice("Ringkasan surat berhasil diunduh.", "ok");
   }
 
@@ -722,7 +776,7 @@
 
   function exportLetters(kind) {
     const rows = kind === "incoming"
-      ? scopeBySession(store.data.incomingLetters, store.session, "incoming").map((item) => [
+      ? scopeBySession(sortByDateDesc(decorateLetterCollection(store.data.incomingLetters), "letter_date"), store.session, "incoming").map((item) => [
           item.agenda_no,
           item.letter_no,
           serviceTypeName(item),
@@ -733,7 +787,7 @@
           item.priority,
           item.status,
         ])
-      : scopeBySession(store.data.outgoingLetters, store.session, "outgoing").map((item) => [
+      : scopeBySession(sortByDateDesc(decorateLetterCollection(store.data.outgoingLetters), "letter_date"), store.session, "outgoing").map((item) => [
           item.agenda_no,
           item.letter_no,
           item.subject,
@@ -767,10 +821,10 @@
       return store.data.employees.slice();
     },
     incomingLetters() {
-      return scopeBySession(sortByDateDesc(store.data.incomingLetters, "letter_date"), store.session, "incoming");
+      return scopeBySession(sortByDateDesc(decorateLetterCollection(store.data.incomingLetters), "letter_date"), store.session, "incoming");
     },
     outgoingLetters() {
-      return scopeBySession(sortByDateDesc(store.data.outgoingLetters, "letter_date"), store.session, "outgoing");
+      return scopeBySession(sortByDateDesc(decorateLetterCollection(store.data.outgoingLetters), "letter_date"), store.session, "outgoing");
     },
     complaints() {
       return sortByDateDesc(store.data.complaints, "created_at");
