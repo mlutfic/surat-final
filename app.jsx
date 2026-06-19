@@ -57,6 +57,7 @@ function Login({ onSuccess, onPublic }) {
   const office = AppSelectors.office();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const whatsappTarget = office?.whatsapp_notification || "-";
@@ -158,9 +159,18 @@ function Login({ onSuccess, onPublic }) {
                   </div>
                 </Field>
                 <Field label="Kata Sandi">
-                  <div className="login-input-shell">
+                  <div className="login-input-shell has-toggle">
                     <span><Icon name="lock" size={16} /></span>
-                    <input className="input" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Masukkan password" onKeyDown={(event) => { if (event.key === "Enter") submit(); }} />
+                    <input className="input" type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Masukkan password" onKeyDown={(event) => { if (event.key === "Enter") submit(); }} />
+                    <button
+                      type="button"
+                      className="login-input-toggle"
+                      aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+                      aria-pressed={showPassword}
+                      onClick={() => setShowPassword((value) => !value)}
+                    >
+                      <Icon name={showPassword ? "eyeoff" : "eye"} size={17} />
+                    </button>
                   </div>
                 </Field>
               </div>

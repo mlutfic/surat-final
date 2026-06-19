@@ -402,10 +402,39 @@
   border-color: #dbe4ef;
   background: #f8fbfe;
 }
+.login-input-shell.has-toggle .input {
+  padding-right: 46px;
+}
 .login-input-shell .input:focus {
   border-color: #10233f;
   background: #fff;
   box-shadow: 0 0 0 3px #edf2ff;
+}
+.login-input-toggle {
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #758ba5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1;
+}
+.login-input-toggle:hover {
+  color: #10233f;
+  background: #edf2ff;
+}
+.login-input-toggle:focus-visible {
+  outline: 2px solid #c9d9ff;
+  outline-offset: 2px;
+  color: #10233f;
 }
 .login-field-stack {
   display: grid;
