@@ -187,6 +187,7 @@ function FormSuratMasuk({ go }) {
             <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.85 }}>
               <li>Nomor agenda surat masuk dibuat otomatis oleh database sebagai nomor urut surat masuk.</li>
               <li>Operator desa hanya dapat mencatat surat dari unit desanya sendiri agar alur lebih konsisten.</li>
+              <li>Notifikasi WhatsApp otomatis hanya dikirim untuk surat masuk baru yang langsung disimpan, bukan draft atau edit data lama.</li>
               <li>Unduh dan cetak akan aktif penuh setelah surat tersimpan.</li>
             </ul>
           </div>
@@ -247,7 +248,7 @@ function FormSuratMasuk({ go }) {
       </div>
       <WaBanner
         label="Kirim notifikasi WhatsApp"
-        hint={`Ringkasan surat masuk dikirim ke ${office.whatsapp_notification}.`}
+        hint={`Ringkasan surat masuk baru dikirim otomatis ke ${office.whatsapp_notification}. Draft dan edit data lama tidak mengirim ulang.`}
         on={form.notify_whatsapp}
         onChange={(value) => patch({ notify_whatsapp: value })}
       />

@@ -28,13 +28,13 @@ function StatusBadge({ s }) {
   return <span className={"badge " + (map[s] || "b-biasa")}>{s}</span>;
 }
 
-function RowActions({ onView, onPrint, onDownload, onWhatsApp, onEdit, onDelete, viewTitle = "Baca", downloadTitle = "Unduh Dokumen" }) {
+function RowActions({ onView, onPrint, onDownload, onWhatsApp, onEdit, onDelete, viewTitle = "Baca", downloadTitle = "Unduh Dokumen", whatsappTitle = "Notifikasi WhatsApp" }) {
   return (
     <div className="row gap-2" style={{ justifyContent: "flex-end" }}>
       {onView && <button type="button" className="iconbtn" title={viewTitle} onClick={onView}><Icon name="eye" size={16} /></button>}
       {onPrint && <button type="button" className="iconbtn" title="Cetak" onClick={onPrint}><Icon name="print" size={16} /></button>}
       {onDownload && <button type="button" className="iconbtn" title={downloadTitle} onClick={onDownload}><Icon name="download" size={16} /></button>}
-      {onWhatsApp && <button type="button" className="iconbtn" title="Notifikasi WhatsApp" style={{ color: "var(--ok)" }} onClick={onWhatsApp}><Icon name="whatsapp" size={16} /></button>}
+      {onWhatsApp && <button type="button" className="iconbtn" title={whatsappTitle} style={{ color: "var(--ok)" }} onClick={onWhatsApp}><Icon name="whatsapp" size={16} /></button>}
       {onEdit && <button type="button" className="iconbtn" title="Edit" onClick={onEdit}><Icon name="edit" size={16} /></button>}
       {onDelete && <button type="button" className="iconbtn danger" title="Hapus" onClick={onDelete}><Icon name="trash" size={16} /></button>}
     </div>

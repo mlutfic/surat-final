@@ -62,7 +62,6 @@ function RekapSuratMasuk({ go }) {
   const [page, setPage] = useState(1);
   const [priority, setPriority] = useState("Semua");
   const [query, setQuery] = useState("");
-  const office = AppSelectors.office();
   const rows = AppSelectors.incomingLetters();
   const filtered = filterIncomingRows(rows, query, priority);
   const { totalPages, pageRows, safePage } = paginateRows(filtered, page, 8);
@@ -126,7 +125,8 @@ function RekapSuratMasuk({ go }) {
                       onView={() => AppApi.previewLetter("incoming", item.id)}
                       onPrint={() => AppApi.printLetter("incoming", item.id)}
                       onDownload={() => AppApi.downloadLetter("incoming", item.id)}
-                      onWhatsApp={() => AppApi.openWhatsapp((office && office.whatsapp_notification) || "", AppApi.waMessageForLetter("incoming", item))}
+                      onWhatsApp={() => AppApi.sendIncomingWhatsappNotification(item.id)}
+                      whatsappTitle="Kirim / cek notifikasi WA otomatis"
                       onEdit={() => { AppApi.setFormContext("incoming", item.id); go("form-masuk"); }}
                       onDelete={async () => {
                         const confirmed = await AppApi.confirmDeletion("surat masuk", `${item.agenda_no || "-"} · ${item.subject || item.letter_no || "-"}`, `Nomor surat: ${item.letter_no || "-"}`);
@@ -212,6 +212,7 @@ function RekapSuratKeluar({ go }) {
                       onPrint={() => AppApi.printLetter("outgoing", item.id)}
                       onDownload={() => AppApi.downloadLetter("outgoing", item.id)}
                       onWhatsApp={() => AppApi.openWhatsapp((office && office.whatsapp_notification) || "", AppApi.waMessageForLetter("outgoing", item))}
+                      whatsappTitle="Buka WhatsApp"
                       onEdit={() => { AppApi.setFormContext("outgoing", item.id); go("form-keluar"); }}
                       onDelete={async () => {
                         const confirmed = await AppApi.confirmDeletion("surat keluar", `${item.agenda_no || "-"} · ${item.subject || item.letter_no || "-"}`, `Nomor surat: ${item.letter_no || "-"}`);

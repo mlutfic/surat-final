@@ -176,6 +176,31 @@
     });
   }
 
+  async function serverRequest(path, options) {
+    const response = await fetch(path, {
+      method: options?.method || "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+      },
+      body: options?.body,
+    });
+
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch (error) {
+      payload = null;
+    }
+
+    if (!response.ok) {
+      const detail = payload?.message || payload?.details?.notification?.errorMessage || response.statusText || "Permintaan ke server gagal.";
+      throw new Error(detail || `Gagal memproses permintaan (${response.status}).`);
+    }
+
+    return payload;
+  }
+
   function normalizeOfficeProfile(row) {
     if (!row) return null;
     return {
@@ -548,7 +573,8 @@
 
   async function saveIncomingLetter(form) {
     const attachment = await buildFilePayload(form);
-    await rpc("upsert_incoming_letter", {
+    const isNewRecord = !form.id;
+    const record = await rpc("upsert_incoming_letter", {
       p_session_token: store.session?.token,
       p_payload: {
         id: form.id || null,
@@ -567,9 +593,30 @@
         ...attachment,
       },
     });
+    let notificationResult = null;
+    if (isNewRecord && Boolean(form.notify_whatsapp) && form.status !== "Draft" && record?.id) {
+      try {
+        notificationResult = await sendIncomingWhatsappNotification(record.id, { silent: true, rethrow: true });
+      } catch (error) {
+        notificationResult = { ok: false, message: error.message || "Notifikasi WhatsApp gagal dikirim." };
+      }
+    }
     clearFormContext();
     await refreshAll();
-    setNotice(form.id ? "Surat masuk berhasil diperbarui." : "Surat masuk berhasil disimpan.", "ok");
+    if (!isNewRecord) {
+      setNotice("Surat masuk berhasil diperbarui.", "ok");
+      return { record, notificationResult };
+    }
+    if (notificationResult?.ok) {
+      setNotice("Surat masuk berhasil disimpan dan notifikasi WhatsApp berhasil diteruskan ke gateway.", "ok");
+      return { record, notificationResult };
+    }
+    if (notificationResult && notificationResult.ok === false) {
+      setNotice(`Surat masuk berhasil disimpan, tetapi notifikasi WhatsApp gagal diproses. ${notificationResult.message}`, "warn");
+      return { record, notificationResult };
+    }
+    setNotice("Surat masuk berhasil disimpan.", "ok");
+    return { record, notificationResult };
   }
 
   async function saveOutgoingLetter(form) {
@@ -691,6 +738,31 @@
     const target = sanitizeWhatsappNumber(number);
     if (!target) return;
     window.open(`https://wa.me/${target}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+  }
+
+  async function sendIncomingWhatsappNotification(letterId, options) {
+    try {
+      if (!store.session?.token) throw new Error("Sesi login tidak ditemukan.");
+      const result = await serverRequest("/api/notifications/incoming-whatsapp", {
+        method: "POST",
+        body: JSON.stringify({
+          sessionToken: store.session.token,
+          letterId,
+          force: Boolean(options?.force),
+        }),
+      });
+
+      if (!options?.silent) {
+        const tone = result?.status === "failed" ? "danger" : result?.status === "skipped" ? "warn" : (result?.alreadySent ? "info" : "ok");
+        setNotice(result?.message || "Notifikasi WhatsApp berhasil diproses.", tone);
+      }
+
+      return result;
+    } catch (error) {
+      if (!options?.silent) setNotice(error.message || "Notifikasi WhatsApp gagal diproses.", "warn");
+      if (options?.rethrow) throw error;
+      return { ok: false, message: error.message || "Notifikasi WhatsApp gagal diproses." };
+    }
   }
 
   function escapeHtml(value) {
@@ -935,6 +1007,7 @@
       settleConfirm,
       confirmDeletion,
       openWhatsapp,
+      sendIncomingWhatsappNotification,
       waMessageForLetter,
       letterRecord,
       fetchIncomingLetter,
