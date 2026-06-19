@@ -310,7 +310,7 @@ function EmployeeTableSection({ status, items, onEdit, onDelete }) {
                 </td>
                 <td className="employee-roster-actions">
                   <RowActions
-                    onView={() => AppApi.setNotice(`Pegawai: ${item.full_name} · ${item.position}`, "info")}
+                    onView={() => onEdit(item, "view")}
                     onEdit={() => onEdit(item)}
                     onDelete={() => onDelete(item)}
                     viewTitle="Detail Pegawai"
@@ -322,6 +322,44 @@ function EmployeeTableSection({ status, items, onEdit, onDelete }) {
         </table>
       </div>
       {items.length === 0 && <EmptyHint icon="users">Tidak ada pegawai pada kelompok {status}.</EmptyHint>}
+    </div>
+  );
+}
+
+function EmployeeDetailCard({ employee, onClose, onEdit, onDelete }) {
+  if (!employee) return null;
+  return (
+    <div className="card card-pad" style={{ marginBottom: 20 }}>
+      <div className="row between center wrap gap-3" style={{ marginBottom: 18 }}>
+        <div>
+          <div className="eyebrow" style={{ marginBottom: 8 }}>Detail Pegawai</div>
+          <h3 style={{ margin: 0, fontSize: 18 }}>{employee.full_name}</h3>
+          <p className="muted" style={{ margin: "6px 0 0", fontSize: 12.5 }}>
+            Rincian data ASN untuk verifikasi cepat sebelum edit atau hapus.
+          </p>
+        </div>
+        <span className={"badge " + employeeStatusBadgeClass(employee.employment_status)}>
+          {employee.employment_status}
+        </span>
+      </div>
+      <div className="employee-detail-grid">
+        <div className="info-row"><div className="ik">Nama Lengkap</div><div className="iv">{employee.full_name || "-"}</div></div>
+        <div className="info-row"><div className="ik">NIP</div><div className="iv tabnum">{employee.nip || "-"}</div></div>
+        <div className="info-row"><div className="ik">Jabatan</div><div className="iv">{employee.position || "-"}</div></div>
+        <div className="info-row"><div className="ik">Golongan</div><div className="iv">{employee.grade || "-"}</div></div>
+        <div className="info-row"><div className="ik">Unit Kerja</div><div className="iv">{employee.work_unit || "-"}</div></div>
+        <div className="info-row"><div className="ik">Status ASN</div><div className="iv">{employee.employment_status || "-"}</div></div>
+      </div>
+      <div className="row gap-2 wrap" style={{ marginTop: 20 }}>
+        <button type="button" className="btn btn-primary" onClick={() => onEdit(employee)}>
+          <Icon name="edit" size={15} />Edit Pegawai
+        </button>
+        <button type="button" className="btn btn-ghost" style={{ color: "var(--hot)" }} onClick={() => onDelete(employee)}>
+          <Icon name="trash" size={15} />Hapus Pegawai
+        </button>
+        <div className="grow" />
+        <button type="button" className="btn btn-ghost" onClick={onClose}>Tutup</button>
+      </div>
     </div>
   );
 }
@@ -340,6 +378,7 @@ function DataKepegawaian() {
     employment_status: "PNS",
   });
   const [editing, setEditing] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
   const employees = AppSelectors.employees();
 
   const counts = employees.reduce((carry, item) => {
@@ -369,11 +408,22 @@ function DataKepegawaian() {
     try {
       await AppApi.saveEmployee(form);
       setEditing(false);
+      setSelectedEmployee(null);
       setForm({ id: "", full_name: "", nip: "", position: "", grade: "-", work_unit: "", employment_status: "PNS" });
     } catch (error) {
       AppApi.setNotice(error.message || "Gagal menyimpan pegawai.", "danger");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function removeEmployee(item) {
+    if (!window.confirm(`Hapus data pegawai ${item.full_name}?`)) return;
+    try {
+      await AppApi.deleteEmployee(item.id);
+      setSelectedEmployee((value) => (value?.id === item.id ? null : value));
+    } catch (error) {
+      AppApi.setNotice(error.message || "Gagal menghapus pegawai.", "danger");
     }
   }
 
@@ -384,12 +434,23 @@ function DataKepegawaian() {
         title="Data Kepegawaian"
         sub={`${employees.length} pegawai terdaftar · ${counts.PNS || 0} PNS · ${counts.PPPK || 0} PPPK`}
         actions={
-          <button type="button" className="btn btn-primary" onClick={() => { setEditing(true); setForm({ id: "", full_name: "", nip: "", position: "", grade: "-", work_unit: "", employment_status: "PNS" }); }}>
+          <button type="button" className="btn btn-primary" onClick={() => { setEditing(true); setSelectedEmployee(null); setForm({ id: "", full_name: "", nip: "", position: "", grade: "-", work_unit: "", employment_status: "PNS" }); }}>
             <Icon name="plus" size={15} />Tambah Pegawai
           </button>
         }
       />
       {editing && <EmployeeEditor form={form} setForm={setForm} busy={busy} onSave={save} onCancel={() => setEditing(false)} />}
+      {!editing && selectedEmployee && (
+        <EmployeeDetailCard
+          employee={selectedEmployee}
+          onClose={() => setSelectedEmployee(null)}
+          onEdit={(item) => {
+            setEditing(true);
+            setForm({ ...item });
+          }}
+          onDelete={removeEmployee}
+        />
+      )}
       <div className="stat-grid" style={{ marginBottom: 18, gridTemplateColumns: "repeat(3, 1fr)" }}>
         <div className="stat">
           <div className="si" style={{ background: "var(--info-bg)", color: "var(--info)" }}><Icon name="users" size={20} /></div>
@@ -424,10 +485,17 @@ function DataKepegawaian() {
           key={section.status}
           status={section.status}
           items={section.items}
-          onEdit={(item) => { setEditing(true); setForm({ ...item }); }}
-          onDelete={(item) => {
-            if (window.confirm(`Hapus data pegawai ${item.full_name}?`)) AppApi.deleteEmployee(item.id);
+          onEdit={(item, mode = "edit") => {
+            if (mode === "view") {
+              setEditing(false);
+              setSelectedEmployee({ ...item });
+              return;
+            }
+            setSelectedEmployee(null);
+            setEditing(true);
+            setForm({ ...item });
           }}
+          onDelete={removeEmployee}
         />
       ))}
       {visibleCount === 0 && grouped.length === 0 && <EmptyHint icon="users">Tidak ada pegawai dengan filter yang dipilih.</EmptyHint>}

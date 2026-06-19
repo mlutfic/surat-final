@@ -84,6 +84,9 @@
 .employee-roster-card {
   overflow: hidden;
 }
+.employee-detail-grid {
+  border-top: 1px solid var(--line);
+}
 .employee-roster-table thead th {
   background: linear-gradient(180deg, #f5fdad 0%, #e8f16d 100%);
   color: #23310f;
