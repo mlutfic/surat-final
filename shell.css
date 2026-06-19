@@ -81,6 +81,49 @@
 .side-logout { flex-shrink: 0; }
 .desktop-sidebar-toggle { display: inline-grid; flex-shrink: 0; }
 
+.employee-roster-card {
+  overflow: hidden;
+}
+.employee-roster-table thead th {
+  background: linear-gradient(180deg, #f5fdad 0%, #e8f16d 100%);
+  color: #23310f;
+  border-bottom-color: #ced970;
+}
+.employee-roster-table tbody td {
+  vertical-align: top;
+}
+.employee-roster-no {
+  text-align: center;
+  font-weight: 700;
+  color: var(--ink);
+}
+.employee-roster-name {
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--ink);
+  line-height: 1.45;
+}
+.employee-roster-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+.employee-roster-meta {
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.employee-roster-position {
+  text-align: center;
+}
+.employee-roster-actions {
+  white-space: nowrap;
+  width: 96px;
+}
+
 @media (min-width: 981px) {
   .app.sidebar-collapsed .content { max-width: 1440px; }
   .sidebar.collapsed { width: 92px; }
@@ -2022,6 +2065,8 @@
   .sidebar.open { transform: translateX(0); box-shadow: var(--shadow-lg); }
   .menu-toggle { display: inline-grid; }
   .desktop-sidebar-toggle { display: none; }
+  .employee-roster-actions { white-space: normal; }
+  .employee-roster-actions .row { justify-content: flex-start !important; flex-wrap: wrap; }
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
   .login-wrap { padding: 18px; }
   .login-form-side {

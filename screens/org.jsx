@@ -268,7 +268,7 @@ function sortEmployees(left, right) {
 
 function EmployeeTableSection({ status, items, onEdit, onDelete }) {
   return (
-    <div className="card" style={{ marginTop: 18 }}>
+    <div className="card employee-roster-card" style={{ marginTop: 18 }}>
       <div className="card-pad" style={{ paddingBottom: 14 }}>
         <div className="eyebrow" style={{ marginBottom: 8 }}>{status}</div>
         <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-end", gap: 12 }}>
@@ -282,42 +282,38 @@ function EmployeeTableSection({ status, items, onEdit, onDelete }) {
         </div>
       </div>
       <div className="tbl-wrap">
-        <table className="tbl">
+        <table className="tbl employee-roster-table">
           <thead>
             <tr>
-              <th>Nama / Jabatan</th>
-              <th>NIP</th>
-              <th>Gol.</th>
-              <th>Unit Kerja</th>
-              <th>Status</th>
+              <th style={{ width: 64, textAlign: "center" }}>No.</th>
+              <th>Nama / NIP</th>
+              <th style={{ width: "28%", textAlign: "center" }}>Jabatan</th>
               <th style={{ textAlign: "right" }}>Aksi</th>
             </tr>
           </thead>
           <tbody>
-            {items.map((item) => (
+            {items.map((item, index) => (
               <tr key={item.id}>
+                <td className="employee-roster-no tabnum">{index + 1}</td>
                 <td>
-                  <div className="row gap-3 center">
-                    <Avatar name={item.full_name} size={36} />
-                    <div>
-                      <div className="td-strong">{item.full_name}</div>
-                      <div className="muted" style={{ fontSize: 12, marginTop: 1 }}>{item.position}</div>
-                    </div>
-                  </div>
+                  <div className="employee-roster-name">{item.full_name}</div>
+                  <div className="employee-roster-sub tabnum">NIP. {item.nip || "-"}</div>
+                  {item.grade && item.grade !== "-" ? (
+                    <div className="employee-roster-meta">Gol. {item.grade}</div>
+                  ) : null}
                 </td>
-                <td className="tabnum" style={{ fontSize: 12.5 }}>{item.nip}</td>
-                <td className="tabnum">{item.grade}</td>
-                <td>{item.work_unit}</td>
-                <td>
-                  <span className={"badge " + employeeStatusBadgeClass(item.employment_status)}>
-                    {item.employment_status}
-                  </span>
+                <td className="employee-roster-position">
+                  <div className="employee-roster-name">{item.position || "-"}</div>
+                  {item.work_unit ? (
+                    <div className="employee-roster-sub">{item.work_unit}</div>
+                  ) : null}
                 </td>
-                <td>
+                <td className="employee-roster-actions">
                   <RowActions
                     onView={() => AppApi.setNotice(`Pegawai: ${item.full_name} · ${item.position}`, "info")}
                     onEdit={() => onEdit(item)}
                     onDelete={() => onDelete(item)}
+                    viewTitle="Detail Pegawai"
                   />
                 </td>
               </tr>
