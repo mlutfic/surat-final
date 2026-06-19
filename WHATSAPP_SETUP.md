@@ -36,7 +36,7 @@ Nomor tujuan diambil dari field:
 - `Profil Kantor -> WA Notifikasi Dokumen`
 
 Nomor boleh diisi format `08...` atau `628...`.
-Untuk sementara repo ini sudah saya siapkan agar nomor target diarahkan ke `081932473871` lewat migrasi update di atas.
+Untuk sementara repo ini sudah saya siapkan agar nomor target diarahkan ke `081367236229` lewat migrasi update di atas.
 
 ## 4. Deploy ulang ke Vercel
 

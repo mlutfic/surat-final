@@ -1263,7 +1263,7 @@ insert into public.office_profile (
   'Sebagian layanan administrasi kecamatan masih dicatat manual, sulit dipantau, dan membuat tindak lanjut dokumen berjalan lambat. DILAN CERDAS disusun agar warga dan operator desa memiliki satu jalur layanan yang lebih rapi dan mudah diawasi.',
   'Satu aplikasi untuk informasi layanan, surat masuk, surat keluar, pengaduan, survei kepuasan, dan arsip digital kecamatan.',
   'Padang Lalang, Desa Jernih, Kecamatan Air Hitam, Kabupaten Sarolangun, Provinsi Jambi',
-  '081932473871',
+  '081367236229',
   'kantorcamatairhitam@gmail.com',
   '-',
   '0823 2487 4997',
