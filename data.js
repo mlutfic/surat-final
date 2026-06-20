@@ -169,11 +169,21 @@ function exportCsv(filename, rows) {
   downloadBlob(filename, new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" }));
 }
 
-function openWindowHtml(title, bodyHtml, existingPopup) {
+function openWindowHtml(title, bodyHtml, existingPopup, options) {
   const popup = existingPopup && !existingPopup.closed
     ? existingPopup
-    : window.open("", "_blank", "noopener,noreferrer,width=980,height=760");
+    : window.open("", "_blank", options?.features || "popup=yes,width=980,height=760");
   if (!popup) return null;
+  const autoPrintScript = options?.autoPrint
+    ? `<script>
+        window.addEventListener("load", function () {
+          window.focus();
+          window.setTimeout(function () {
+            window.print();
+          }, 500);
+        });
+      <\/script>`
+    : "";
   popup.document.open();
   popup.document.write(`<!DOCTYPE html>
 <html lang="id">
@@ -201,7 +211,7 @@ function openWindowHtml(title, bodyHtml, existingPopup) {
     }
   </style>
 </head>
-<body>${bodyHtml}</body>
+<body>${bodyHtml}${autoPrintScript}</body>
 </html>`);
   popup.document.close();
   return popup;

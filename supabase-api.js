@@ -775,6 +775,43 @@
       .replace(/'/g, "&#39;");
   }
 
+  function hasStoredAttachment(record) {
+    return Boolean(record?.file_content_base64 && record.file_mime_type);
+  }
+
+  function createAttachmentObjectUrl(record) {
+    if (!hasStoredAttachment(record)) return "";
+    return URL.createObjectURL(base64ToBlob(record.file_content_base64, record.file_mime_type));
+  }
+
+  function releaseAttachmentObjectUrlOnClose(popup, objectUrl) {
+    if (!popup || !objectUrl) return;
+    const timer = window.setInterval(() => {
+      if (!popup.closed) return;
+      window.clearInterval(timer);
+      URL.revokeObjectURL(objectUrl);
+    }, 2000);
+  }
+
+  function openAttachmentPopup(record, popup, printMode) {
+    if (!popup || popup.closed) return null;
+    const objectUrl = createAttachmentObjectUrl(record);
+    if (!objectUrl) return popup;
+    releaseAttachmentObjectUrlOnClose(popup, objectUrl);
+    popup.location.replace(objectUrl);
+    if (printMode) {
+      window.setTimeout(() => {
+        try {
+          popup.focus();
+          popup.print();
+        } catch (error) {
+          /* ignore browser print restrictions */
+        }
+      }, 900);
+    }
+    return popup;
+  }
+
   function buildAttachmentPreview(record) {
     if (!record?.file_content_base64 || !record.file_mime_type) return "";
     const source = `data:${record.file_mime_type};base64,${record.file_content_base64}`;
@@ -861,8 +898,14 @@
       const record = kind === "incoming" ? await fetchIncomingLetter(id) : await fetchOutgoingLetter(id);
       if (!record) throw new Error("Dokumen tidak ditemukan.");
       const nextTitle = `${kind === "incoming" ? "Surat Masuk" : "Surat Keluar"} ${record.agenda_no || ""}`;
-      const activePopup = openWindowHtml(nextTitle, buildLetterSheet(kind, record), popup);
-      if (printMode && activePopup) window.setTimeout(() => activePopup.print(), 450);
+      if (hasStoredAttachment(record)) {
+        openAttachmentPopup(record, popup, printMode);
+        if (printMode) {
+          setNotice("Dokumen dibuka di tab baru. Jika dialog cetak tidak muncul otomatis, gunakan Ctrl+P atau tombol cetak browser.", "info");
+        }
+        return;
+      }
+      openWindowHtml(nextTitle, buildLetterSheet(kind, record), popup, { autoPrint: printMode });
     } catch (error) {
       if (popup && !popup.closed) {
         openWindowHtml(title, `
