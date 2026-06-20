@@ -812,6 +812,138 @@
     return popup;
   }
 
+  function sanitizePdfText(value) {
+    return String(value || "")
+      .normalize("NFKD")
+      .replace(/[^\x20-\x7E]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\\/g, "\\\\")
+      .replace(/\(/g, "\\(")
+      .replace(/\)/g, "\\)");
+  }
+
+  function wrapPdfText(value, maxChars) {
+    const clean = String(value || "-").replace(/\s+/g, " ").trim();
+    if (!clean) return ["-"];
+    const words = clean.split(" ");
+    const lines = [];
+    let current = "";
+    words.forEach((word) => {
+      const next = current ? `${current} ${word}` : word;
+      if (next.length <= maxChars) {
+        current = next;
+        return;
+      }
+      if (current) lines.push(current);
+      current = word;
+    });
+    if (current) lines.push(current);
+    return lines.length ? lines : ["-"];
+  }
+
+  function buildLetterPdfBlob(kind, record) {
+    const office = officeProfile();
+    const label = kind === "incoming" ? "Surat Masuk" : "Surat Keluar";
+    const metaLines = kind === "incoming"
+      ? [
+          `No. Agenda: ${record.agenda_no || "-"}`,
+          `Nomor Surat: ${record.letter_no || "-"}`,
+          `Tanggal Surat: ${formatDateId(record.letter_date)}`,
+          `Jenis Layanan: ${serviceTypeName(record)}`,
+          `Asal Surat: ${record.source_name || "-"}`,
+          `Tujuan Surat: ${record.target_unit || "-"}`,
+          `Sifat: ${record.priority || "-"}`,
+          `Status: ${record.status || "-"}`,
+          `Nomor WA Pengirim: ${record.sender_phone || "-"}`,
+        ]
+      : [
+          `No. Agenda: ${record.agenda_no || "-"}`,
+          `Nomor Surat: ${record.letter_no || "-"}`,
+          `Tanggal Surat: ${formatDateId(record.letter_date)}`,
+          `Asal Surat: ${record.source_unit || "-"}`,
+          `Tujuan Surat: ${record.destination_name || "-"}`,
+          `Klasifikasi Arsip: ${record.archive_classification || "-"}`,
+          `Sifat: ${record.priority || "-"}`,
+          `Status: ${record.status || "-"}`,
+        ];
+
+    const lines = [
+      `${label.toUpperCase()} - ${record.agenda_no || "-"}`,
+      office?.office_name || "DILAN CERDAS",
+      office?.government_name || "-",
+      `WhatsApp Notifikasi: ${office?.whatsapp_notification || "-"}`,
+      "",
+      ...metaLines,
+      "",
+      "Perihal:",
+      ...wrapPdfText(record.subject || "-", 82).map((line) => `  ${line}`),
+      "",
+      "Catatan:",
+      ...wrapPdfText(record.notes || "-", 82).map((line) => `  ${line}`),
+    ];
+
+    if (record.file_name) {
+      lines.push("", `Lampiran Tersimpan: ${record.file_name}`);
+    }
+
+    const maxLinesPerPage = 44;
+    const pages = [];
+    for (let index = 0; index < lines.length; index += maxLinesPerPage) {
+      pages.push(lines.slice(index, index + maxLinesPerPage));
+    }
+
+    const fontObject = 1;
+    const pagesObject = 2;
+    const pageObjects = [];
+    const contentObjects = [];
+    let objectNumber = 3;
+
+    pages.forEach(() => {
+      pageObjects.push(objectNumber);
+      contentObjects.push(objectNumber + 1);
+      objectNumber += 2;
+    });
+
+    const catalogObject = objectNumber;
+    const objects = new Array(catalogObject + 1);
+    objects[fontObject] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>";
+    objects[pagesObject] = `<< /Type /Pages /Kids [${pageObjects.map((value) => `${value} 0 R`).join(" ")}] /Count ${pageObjects.length} >>`;
+
+    pages.forEach((pageLines, pageIndex) => {
+      const stream = [
+        "BT",
+        "/F1 11 Tf",
+        "16 TL",
+        "1 0 0 1 48 790 Tm",
+        ...pageLines.map((line, index) => `${index ? "T*" : ""}${index ? "\n" : ""}(${sanitizePdfText(line)}) Tj`).join("\n").split("\n"),
+        "ET",
+      ].join("\n");
+
+      objects[pageObjects[pageIndex]] = `<< /Type /Page /Parent ${pagesObject} 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 ${fontObject} 0 R >> >> /Contents ${contentObjects[pageIndex]} 0 R >>`;
+      objects[contentObjects[pageIndex]] = `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`;
+    });
+
+    objects[catalogObject] = `<< /Type /Catalog /Pages ${pagesObject} 0 R >>`;
+
+    let pdf = "%PDF-1.4\n";
+    const offsets = new Array(objects.length).fill(0);
+    for (let index = 1; index < objects.length; index += 1) {
+      offsets[index] = pdf.length;
+      pdf += `${index} 0 obj\n${objects[index]}\nendobj\n`;
+    }
+
+    const xrefStart = pdf.length;
+    pdf += `xref\n0 ${objects.length}\n`;
+    pdf += "0000000000 65535 f \n";
+    for (let index = 1; index < objects.length; index += 1) {
+      pdf += `${String(offsets[index]).padStart(10, "0")} 00000 n \n`;
+    }
+    pdf += `trailer\n<< /Size ${objects.length} /Root ${catalogObject} 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+
+    return new Blob([pdf], { type: "application/pdf" });
+  }
+
   function buildAttachmentPreview(record) {
     if (!record?.file_content_base64 || !record.file_mime_type) return "";
     const source = `data:${record.file_mime_type};base64,${record.file_content_base64}`;
@@ -930,9 +1062,9 @@
       setNotice(`Dokumen ${record.file_name} berhasil diunduh.`, "ok");
       return;
     }
-    const fallbackName = `${kind === "incoming" ? "surat-masuk" : "surat-keluar"}-${record.agenda_no || "draft"}.html`;
-    downloadBlob(fallbackName, new Blob([buildLetterSheet(kind, record)], { type: "text/html;charset=utf-8" }));
-    setNotice("Ringkasan surat berhasil diunduh.", "ok");
+    const fallbackName = `${kind === "incoming" ? "surat-masuk" : "surat-keluar"}-${record.agenda_no || "draft"}.pdf`;
+    downloadBlob(fallbackName, buildLetterPdfBlob(kind, record));
+    setNotice("Ringkasan surat berhasil diunduh dalam format PDF.", "ok");
   }
 
   function downloadDashboardReport() {
