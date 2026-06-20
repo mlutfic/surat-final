@@ -6,6 +6,7 @@
   let bootPromise = null;
   let noticeTimer = null;
   let confirmResolver = null;
+  let downloadFormatResolver = null;
 
   const store = {
     ready: false,
@@ -13,6 +14,7 @@
     error: null,
     notice: null,
     confirm: null,
+    downloadFormat: null,
     session: readSession(),
     formContext: null,
     data: emptyData(),
@@ -43,6 +45,7 @@
       error: store.error,
       notice: store.notice,
       confirm: store.confirm ? { ...store.confirm } : null,
+      downloadFormat: store.downloadFormat ? { ...store.downloadFormat } : null,
       session: store.session ? { ...store.session } : null,
       formContext: store.formContext ? { ...store.formContext } : null,
       data: {
@@ -128,6 +131,32 @@
     const resolve = confirmResolver;
     confirmResolver = null;
     resolve?.(Boolean(accepted));
+  }
+
+  function requestDownloadFormat(kind, record) {
+    if (downloadFormatResolver) {
+      downloadFormatResolver("");
+      downloadFormatResolver = null;
+    }
+    const label = kind === "incoming" ? "Surat Masuk" : "Surat Keluar";
+    store.downloadFormat = {
+      title: "Pilih Format Unduhan",
+      message: `Pilih format unduhan untuk ${label.toLowerCase()} ini.`,
+      itemLabel: `${record?.agenda_no || "-"} · ${record?.subject || record?.letter_no || "-"}`,
+      description: "PDF cocok untuk cetak dan arsip. DOC cocok jika isi perlu diedit ulang di Microsoft Word.",
+    };
+    emit();
+    return new Promise((resolve) => {
+      downloadFormatResolver = resolve;
+    });
+  }
+
+  function settleDownloadFormat(format) {
+    store.downloadFormat = null;
+    emit();
+    const resolve = downloadFormatResolver;
+    downloadFormatResolver = null;
+    resolve?.(String(format || ""));
   }
 
   function confirmDeletion(subjectLabel, itemLabel, description) {
@@ -944,6 +973,79 @@
     return new Blob([pdf], { type: "application/pdf" });
   }
 
+  function buildLetterDocBlob(kind, record) {
+    const office = officeProfile();
+    const label = kind === "incoming" ? "Surat Masuk" : "Surat Keluar";
+    const meta = kind === "incoming"
+      ? [
+          ["No. Agenda", record.agenda_no],
+          ["Nomor Surat", record.letter_no],
+          ["Tanggal Surat", formatDateId(record.letter_date)],
+          ["Jenis Layanan", serviceTypeName(record)],
+          ["Asal Surat", record.source_name],
+          ["Tujuan Surat", record.target_unit],
+          ["Sifat", record.priority],
+          ["Status", record.status],
+          ["Nomor WA Pengirim", record.sender_phone || "-"],
+        ]
+      : [
+          ["No. Agenda", record.agenda_no],
+          ["Nomor Surat", record.letter_no],
+          ["Tanggal Surat", formatDateId(record.letter_date)],
+          ["Asal Surat", record.source_unit],
+          ["Tujuan Surat", record.destination_name],
+          ["Klasifikasi Arsip", record.archive_classification || "-"],
+          ["Sifat", record.priority],
+          ["Status", record.status],
+        ];
+    const html = `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>${escapeHtml(label)} ${escapeHtml(record.agenda_no || "-")}</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #111827; font-size: 12pt; margin: 24px; }
+    h1, h2, h3, p { margin: 0; }
+    .head { margin-bottom: 18px; }
+    .head h1 { font-size: 18pt; margin-bottom: 6px; }
+    .head p { font-size: 10.5pt; color: #4b5563; line-height: 1.5; }
+    table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+    td { border: 1px solid #d1d5db; padding: 8px 10px; vertical-align: top; font-size: 11pt; }
+    td.label { width: 30%; background: #f9fafb; font-weight: 700; }
+    .section { margin-top: 18px; }
+    .section h3 { font-size: 12pt; margin-bottom: 8px; }
+    .section p { line-height: 1.7; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <div class="head">
+    <h1>${escapeHtml(label)}</h1>
+    <p>${escapeHtml(office?.office_name || "DILAN CERDAS")} · ${escapeHtml(office?.government_name || "-")}</p>
+    <p>WhatsApp Notifikasi: ${escapeHtml(office?.whatsapp_notification || "-")}</p>
+  </div>
+  <table>
+    <tbody>
+      ${meta.map(([metaLabel, value]) => `<tr><td class="label">${escapeHtml(metaLabel)}</td><td>${escapeHtml(value || "-")}</td></tr>`).join("")}
+    </tbody>
+  </table>
+  <div class="section">
+    <h3>Perihal</h3>
+    <p>${escapeHtml(record.subject || "-")}</p>
+  </div>
+  <div class="section">
+    <h3>Catatan</h3>
+    <p>${escapeHtml(record.notes || "-")}</p>
+  </div>
+  ${record.file_name ? `<div class="section"><h3>Lampiran Tersimpan</h3><p>${escapeHtml(record.file_name)}</p></div>` : ""}
+</body>
+</html>`;
+    return new Blob(["\ufeff", html], { type: "application/msword" });
+  }
+
+  function letterDownloadBaseName(kind, record) {
+    return `${kind === "incoming" ? "surat-masuk" : "surat-keluar"}-${record.agenda_no || "draft"}`;
+  }
+
   function buildAttachmentPreview(record) {
     if (!record?.file_content_base64 || !record.file_mime_type) return "";
     const source = `data:${record.file_mime_type};base64,${record.file_content_base64}`;
@@ -1057,14 +1159,25 @@
   async function downloadLetter(kind, id) {
     const record = kind === "incoming" ? await fetchIncomingLetter(id) : await fetchOutgoingLetter(id);
     if (!record) throw new Error("Dokumen tidak ditemukan.");
-    if (record.file_content_base64 && record.file_name) {
-      downloadBlob(record.file_name, base64ToBlob(record.file_content_base64, record.file_mime_type));
-      setNotice(`Dokumen ${record.file_name} berhasil diunduh.`, "ok");
+    const format = await requestDownloadFormat(kind, record);
+    if (!format) return;
+    if (format === "pdf") {
+      if (record.file_content_base64 && record.file_name && record.file_mime_type?.includes("pdf")) {
+        downloadBlob(record.file_name, base64ToBlob(record.file_content_base64, record.file_mime_type));
+        setNotice(`Dokumen PDF ${record.file_name} berhasil diunduh.`, "ok");
+        return;
+      }
+      downloadBlob(`${letterDownloadBaseName(kind, record)}.pdf`, buildLetterPdfBlob(kind, record));
+      setNotice(
+        record.file_name
+          ? "Lampiran asli bukan PDF, jadi sistem mengunduh ringkasan surat dalam format PDF."
+          : "Ringkasan surat berhasil diunduh dalam format PDF.",
+        record.file_name ? "info" : "ok"
+      );
       return;
     }
-    const fallbackName = `${kind === "incoming" ? "surat-masuk" : "surat-keluar"}-${record.agenda_no || "draft"}.pdf`;
-    downloadBlob(fallbackName, buildLetterPdfBlob(kind, record));
-    setNotice("Ringkasan surat berhasil diunduh dalam format PDF.", "ok");
+    downloadBlob(`${letterDownloadBaseName(kind, record)}.doc`, buildLetterDocBlob(kind, record));
+    setNotice("Ringkasan surat berhasil diunduh dalam format DOC.", "ok");
   }
 
   function downloadDashboardReport() {
@@ -1181,6 +1294,7 @@
       exportLetters,
       requestConfirm,
       settleConfirm,
+      settleDownloadFormat,
       confirmDeletion,
       openWhatsapp,
       sendIncomingWhatsappNotification,

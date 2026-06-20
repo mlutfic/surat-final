@@ -178,6 +178,39 @@ a { color: inherit; text-decoration: none; }
   margin-top: 20px;
   flex-wrap: wrap;
 }
+.choice-options {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+.choice-option {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  padding: 14px 15px;
+  border-radius: var(--r);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  transition: border-color .15s, background .15s, transform .05s;
+}
+.choice-option:hover {
+  border-color: var(--navy-300);
+  background: var(--surface-2);
+}
+.choice-option:active {
+  transform: translateY(0.5px);
+}
+.choice-option-label {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.choice-option-desc {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.6;
+}
 
 /* ---------- Badges ---------- */
 .badge {

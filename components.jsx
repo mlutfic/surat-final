@@ -243,6 +243,42 @@ function ConfirmDialog({ open, title, message, itemLabel, description, confirmLa
   );
 }
 
+function ChoiceDialog({ open, title, message, itemLabel, description, options, onSelect, onCancel }) {
+  useEffect(() => {
+    if (!open) return undefined;
+    function handleKeydown(event) {
+      if (event.key === "Escape") onCancel?.();
+    }
+    window.addEventListener("keydown", handleKeydown);
+    return () => window.removeEventListener("keydown", handleKeydown);
+  }, [open, onCancel]);
+
+  if (!open) return null;
+
+  return (
+    <div className="confirm-backdrop" onClick={() => onCancel?.()}>
+      <div className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="choice-dialog-title" onClick={(event) => event.stopPropagation()}>
+        <div className="confirm-kicker" style={{ color: "var(--navy-700)" }}>Format Unduhan</div>
+        <h3 id="choice-dialog-title">{title || "Pilih Format"}</h3>
+        {message && <p className="confirm-message">{message}</p>}
+        {itemLabel && <div className="confirm-target">{itemLabel}</div>}
+        {description && <p className="confirm-description">{description}</p>}
+        <div className="choice-options">
+          {(options || []).map((option) => (
+            <button key={option.value} type="button" className="choice-option" onClick={() => onSelect?.(option.value)}>
+              <span className="choice-option-label">{option.label}</span>
+              {option.description && <span className="choice-option-desc">{option.description}</span>}
+            </button>
+          ))}
+        </div>
+        <div className="confirm-actions">
+          <button type="button" className="btn btn-ghost" onClick={() => onCancel?.()}>Batal</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function LoadingBlock({ label = "Memuat data..." }) {
   return (
     <div className="card card-pad" style={{ textAlign: "center", padding: "48px 24px" }}>
@@ -267,5 +303,6 @@ Object.assign(window, {
   WaBanner,
   InlineNotice,
   ConfirmDialog,
+  ChoiceDialog,
   LoadingBlock,
 });

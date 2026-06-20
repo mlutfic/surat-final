@@ -867,6 +867,19 @@ function App() {
         onConfirm={() => AppApi.settleConfirm(true)}
         onCancel={() => AppApi.settleConfirm(false)}
       />
+      <ChoiceDialog
+        open={Boolean(state.downloadFormat)}
+        title={state.downloadFormat?.title}
+        message={state.downloadFormat?.message}
+        itemLabel={state.downloadFormat?.itemLabel}
+        description={state.downloadFormat?.description}
+        options={[
+          { value: "pdf", label: "PDF", description: "Siap cetak dan cocok untuk arsip final." },
+          { value: "doc", label: "DOC", description: "Cocok jika isi perlu diedit ulang di Microsoft Word." },
+        ]}
+        onSelect={(value) => AppApi.settleDownloadFormat(value)}
+        onCancel={() => AppApi.settleDownloadFormat("")}
+      />
     </div>
   );
 }
