@@ -260,43 +260,52 @@
   function normalizeAgendaNumber(value) {
     const raw = String(value || "").trim();
     if (!raw) return "";
-    if (/^\d+$/.test(raw)) return raw;
-    const digits = raw.match(/(\d+)$/)?.[1];
-    return digits || raw;
+    const digits = /^\d+$/.test(raw) ? raw : (raw.match(/(\d+)$/)?.[1] || "");
+    if (!digits) return "";
+    return digits.replace(/^0+/, "");
   }
 
-  function requireManualAgenda(value, label) {
-    const raw = String(value || "").trim();
-    if (!raw) throw new Error(`${label} wajib diisi manual.`);
-    if (!/^\d+$/.test(raw)) {
-      throw new Error(`${label} harus berupa nomor urut angka tanpa huruf atau prefix.`);
-    }
-    return raw;
+  function buildAgendaCollisionCounts(rows) {
+    return rows.reduce((counts, item) => {
+      const normalizedAgenda = normalizeAgendaNumber(item?.agenda_no);
+      if (!normalizedAgenda) return counts;
+      counts[normalizedAgenda] = (counts[normalizedAgenda] || 0) + 1;
+      return counts;
+    }, {});
   }
 
-  function decorateLetterRow(item) {
-    const displayAgenda = normalizeAgendaNumber(item?.agenda_no) || "-";
+  function decorateLetterRow(item, agendaCollisionCounts) {
+    const rawAgenda = String(item?.agenda_no || "").trim();
+    const normalizedAgenda = normalizeAgendaNumber(rawAgenda);
+    const hasCollision = Boolean(normalizedAgenda) && (agendaCollisionCounts?.[normalizedAgenda] || 0) > 1;
+    const displayAgenda = rawAgenda
+      ? (hasCollision && rawAgenda !== normalizedAgenda ? rawAgenda : (normalizedAgenda || rawAgenda))
+      : "-";
     return {
       ...item,
-      agenda_db_no: item?.agenda_no || "",
+      agenda_db_no: rawAgenda,
       agenda_display_no: displayAgenda,
+      agenda_normalized_no: normalizedAgenda || rawAgenda,
+      agenda_has_conflict: hasCollision,
       agenda_no: displayAgenda,
     };
   }
 
   function decorateLetterCollection(rows) {
-    return rows.map((item) => decorateLetterRow(item));
+    const agendaCollisionCounts = buildAgendaCollisionCounts(rows);
+    return rows.map((item) => decorateLetterRow(item, agendaCollisionCounts));
   }
 
   function decorateLetterRecord(kind, record) {
     if (!record) return null;
     const sourceRows = kind === "incoming" ? store.data.incomingLetters : store.data.outgoingLetters;
-    const matched = decorateLetterCollection(sourceRows).find((item) => item.id === record.id);
-    if (!matched) return decorateLetterRow(record);
+    const agendaCollisionCounts = buildAgendaCollisionCounts(sourceRows);
+    const matched = sourceRows.find((item) => item.id === record.id);
+    if (!matched) return decorateLetterRow(record, agendaCollisionCounts);
     return decorateLetterRow({
       ...record,
-      agenda_no: matched.agenda_db_no || record.agenda_no || "",
-    });
+      agenda_no: matched.agenda_no || record.agenda_no || "",
+    }, agendaCollisionCounts);
   }
 
   function scopeBySession(rows, session, kind) {
@@ -607,14 +616,13 @@
   }
 
   async function saveIncomingLetter(form) {
-    const agendaNo = requireManualAgenda(form.agenda_no, "Nomor agenda surat masuk");
     const attachment = await buildFilePayload(form);
     const isNewRecord = !form.id;
     const record = await rpc("upsert_incoming_letter", {
       p_session_token: store.session?.token,
       p_payload: {
         id: form.id || null,
-        agenda_no: agendaNo,
+        agenda_no: form.agenda_no || "",
         letter_no: form.letter_no,
         letter_date: form.letter_date,
         service_type_id: form.service_type_id || "",
@@ -638,7 +646,6 @@
         notificationResult = { ok: false, message: error.message || "Notifikasi WhatsApp gagal dikirim." };
       }
     }
-    clearFormContext();
     await refreshAll();
     if (!isNewRecord) {
       setNotice("Surat masuk berhasil diperbarui.", "ok");
@@ -657,13 +664,12 @@
   }
 
   async function saveOutgoingLetter(form) {
-    const agendaNo = requireManualAgenda(form.agenda_no, "Nomor agenda surat keluar");
     const attachment = await buildFilePayload(form);
     await rpc("upsert_outgoing_letter", {
       p_session_token: store.session?.token,
       p_payload: {
         id: form.id || null,
-        agenda_no: agendaNo,
+        agenda_no: form.agenda_no || "",
         letter_no: form.letter_no,
         letter_date: form.letter_date,
         source_unit: form.source_unit,
@@ -678,7 +684,6 @@
         ...attachment,
       },
     });
-    clearFormContext();
     await refreshAll();
     setNotice(form.id ? "Surat keluar berhasil diperbarui." : "Surat keluar berhasil disimpan.", "ok");
   }

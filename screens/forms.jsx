@@ -131,23 +131,58 @@ function FormSuratMasuk({ go }) {
   const allIncoming = AppSelectors.incomingLetters();
   const context = state.formContext;
   const editingRecordId = context?.kind === "incoming" ? context.recordId || "" : "";
-  const editingRecord = editingRecordId ? AppApi.letterRecord("incoming", editingRecordId) : null;
+  const isEditing = Boolean(editingRecordId);
   const [form, setForm] = useState(() => createIncomingForm(session, office));
+  const [loadingRecord, setLoadingRecord] = useState(false);
   const [busy, setBusy] = useState(false);
   const isVillageUser = session?.role === "User";
   const officeSyncKey = state.data.officeProfile?.updated_at || state.data.officeProfile?.office_name || "";
 
   useEffect(() => {
     if (!office) return;
-    if (editingRecordId) {
-      const record = AppApi.letterRecord("incoming", editingRecordId);
-      if (record) setForm(incomingRecordToForm(record));
-      return;
-    }
+    if (editingRecordId) return;
+    setLoadingRecord(false);
     setForm(createIncomingForm(session, office));
   }, [editingRecordId, officeSyncKey, session?.id]);
 
+  useEffect(() => {
+    if (!editingRecordId) return undefined;
+    let active = true;
+    const cachedRecord = AppApi.letterRecord("incoming", editingRecordId);
+
+    if (cachedRecord) {
+      setForm(incomingRecordToForm(cachedRecord));
+      setLoadingRecord(false);
+    } else {
+      setLoadingRecord(true);
+    }
+
+    AppApi.fetchIncomingLetter(editingRecordId)
+      .then((record) => {
+        if (!active) return;
+        setForm(incomingRecordToForm(record));
+      })
+      .catch((error) => {
+        if (!active) return;
+        if (cachedRecord) {
+          AppApi.setNotice(error.message || "Detail surat masuk terbaru tidak dapat dimuat. Form menggunakan data yang sudah terbaca di daftar.", "warn");
+          return;
+        }
+        AppApi.clearFormContext();
+        AppApi.setNotice(error.message || "Data surat masuk yang akan diedit tidak dapat dimuat.", "danger");
+        go("rekap-masuk");
+      })
+      .finally(() => {
+        if (active) setLoadingRecord(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [editingRecordId, session?.id]);
+
   if (!office) return <LoadingBlock label="Memuat form surat masuk..." />;
+  if (isEditing && loadingRecord && !form.id) return <LoadingBlock label="Memuat data surat masuk..." />;
 
   function patch(next) {
     setForm((value) => ({ ...value, ...next }));
@@ -157,6 +192,7 @@ function FormSuratMasuk({ go }) {
     setBusy(true);
     try {
       await AppApi.saveIncomingLetter({ ...form, status });
+      AppApi.clearFormContext();
       go("rekap-masuk");
     } catch (error) {
       AppApi.setNotice(error.message || "Gagal menyimpan surat masuk.", "danger");
@@ -169,14 +205,14 @@ function FormSuratMasuk({ go }) {
     <FormShell
       go={go}
       back="rekap-masuk"
-      crumb={["Persuratan", "Surat Masuk", editingRecord ? "Edit" : "Form"]}
-      title={editingRecord ? "Edit Surat Masuk" : "Surat Permohonan / Surat Masuk"}
+      crumb={["Persuratan", "Surat Masuk", isEditing ? "Edit" : "Form"]}
+      title={isEditing ? "Edit Surat Masuk" : "Surat Permohonan / Surat Masuk"}
       sub="Catat surat masuk beserta lampiran dan disposisinya"
       side={
         <>
           <WaPreview lines={[
             <b key="title">📩 Surat Masuk</b>,
-            <span key="agenda">No. Agenda: <b>{form.agenda_no || "Isi manual"}</b></span>,
+            <span key="agenda">No. Agenda: <b>{form.agenda_no || "Otomatis saat simpan"}</b></span>,
             <span key="subject">Perihal: {form.subject || "-"}</span>,
             <span key="meta">Sifat: <b>{form.priority}</b> · {formatDateId(form.letter_date)}</span>,
             <span key="wa">WA resmi dokumen: <b>{office.whatsapp_notification}</b></span>,
@@ -185,7 +221,7 @@ function FormSuratMasuk({ go }) {
           <div className="card card-pad">
             <div className="eyebrow" style={{ marginBottom: 12 }}>Petunjuk Pengisian</div>
             <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.85 }}>
-              <li>Nomor agenda surat masuk diisi manual sebagai nomor urut tanpa huruf atau prefix, misalnya 0155.</li>
+              <li>Nomor agenda surat masuk diisi otomatis oleh sistem sebagai nomor urut `1, 2, 3, 4, ...` tanpa huruf dan tanpa nol di depan.</li>
               <li>Operator desa hanya dapat mencatat surat dari unit desanya sendiri agar alur lebih konsisten.</li>
               <li>Notifikasi WhatsApp otomatis hanya dikirim untuk surat masuk baru yang langsung disimpan, bukan draft atau edit data lama.</li>
               <li>Unduh dan cetak akan aktif penuh setelah surat tersimpan.</li>
@@ -196,13 +232,13 @@ function FormSuratMasuk({ go }) {
     >
       <div className="eyebrow" style={{ marginBottom: 18 }}>Detail Surat</div>
       <div style={grid2}>
-        <Field label="Nomor Agenda" req hint="Isi manual nomor urut tanpa huruf atau prefix.">
+        <Field label="Nomor Agenda" req hint="Nomor agenda diisi otomatis oleh sistem saat surat disimpan.">
           <input
             className="input tabnum"
             value={form.agenda_no}
-            onChange={(event) => patch({ agenda_no: event.target.value })}
-            placeholder="Contoh: 0155"
+            placeholder="Otomatis saat simpan"
             inputMode="numeric"
+            readOnly
           />
         </Field>
         <Field label="Jenis Layanan" req>
@@ -286,23 +322,58 @@ function FormSuratKeluar({ go }) {
   const office = AppSelectors.office();
   const context = state.formContext;
   const editingRecordId = context?.kind === "outgoing" ? context.recordId || "" : "";
-  const editingRecord = editingRecordId ? AppApi.letterRecord("outgoing", editingRecordId) : null;
+  const isEditing = Boolean(editingRecordId);
   const [form, setForm] = useState(() => createOutgoingForm(session, office));
+  const [loadingRecord, setLoadingRecord] = useState(false);
   const [busy, setBusy] = useState(false);
   const isVillageUser = session?.role === "User";
   const officeSyncKey = state.data.officeProfile?.updated_at || state.data.officeProfile?.office_name || "";
 
   useEffect(() => {
     if (!office) return;
-    if (editingRecordId) {
-      const record = AppApi.letterRecord("outgoing", editingRecordId);
-      if (record) setForm(outgoingRecordToForm(record));
-      return;
-    }
+    if (editingRecordId) return;
+    setLoadingRecord(false);
     setForm(createOutgoingForm(session, office));
   }, [editingRecordId, officeSyncKey, session?.id]);
 
+  useEffect(() => {
+    if (!editingRecordId) return undefined;
+    let active = true;
+    const cachedRecord = AppApi.letterRecord("outgoing", editingRecordId);
+
+    if (cachedRecord) {
+      setForm(outgoingRecordToForm(cachedRecord));
+      setLoadingRecord(false);
+    } else {
+      setLoadingRecord(true);
+    }
+
+    AppApi.fetchOutgoingLetter(editingRecordId)
+      .then((record) => {
+        if (!active) return;
+        setForm(outgoingRecordToForm(record));
+      })
+      .catch((error) => {
+        if (!active) return;
+        if (cachedRecord) {
+          AppApi.setNotice(error.message || "Detail surat keluar terbaru tidak dapat dimuat. Form menggunakan data yang sudah terbaca di daftar.", "warn");
+          return;
+        }
+        AppApi.clearFormContext();
+        AppApi.setNotice(error.message || "Data surat keluar yang akan diedit tidak dapat dimuat.", "danger");
+        go("rekap-keluar");
+      })
+      .finally(() => {
+        if (active) setLoadingRecord(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [editingRecordId, session?.id]);
+
   if (!office) return <LoadingBlock label="Memuat form surat keluar..." />;
+  if (isEditing && loadingRecord && !form.id) return <LoadingBlock label="Memuat data surat keluar..." />;
 
   function patch(next) {
     setForm((value) => ({ ...value, ...next }));
@@ -312,6 +383,7 @@ function FormSuratKeluar({ go }) {
     setBusy(true);
     try {
       await AppApi.saveOutgoingLetter({ ...form, status });
+      AppApi.clearFormContext();
       go("rekap-keluar");
     } catch (error) {
       AppApi.setNotice(error.message || "Gagal menyimpan surat keluar.", "danger");
@@ -324,22 +396,22 @@ function FormSuratKeluar({ go }) {
     <FormShell
       go={go}
       back="rekap-keluar"
-      crumb={["Persuratan", "Surat Keluar", editingRecord ? "Edit" : "Form"]}
-      title={editingRecord ? "Edit Surat Keluar" : "Buat Surat Keluar"}
+      crumb={["Persuratan", "Surat Keluar", isEditing ? "Edit" : "Form"]}
+      title={isEditing ? "Edit Surat Keluar" : "Buat Surat Keluar"}
       sub="Susun dan terbitkan surat keluar instansi"
       side={
         <>
           <WaPreview lines={[
             <b key="title">📤 Surat Keluar</b>,
-            <span key="agenda">No. Agenda: <b>{form.agenda_no || "Isi manual"}</b></span>,
+            <span key="agenda">No. Agenda: <b>{form.agenda_no || "Otomatis saat simpan"}</b></span>,
             <span key="dest">Tujuan: {form.destination_name || "-"}</span>,
             <span key="meta">Sifat: <b>{form.priority}</b> · {formatDateId(form.letter_date)}</span>,
             <span key="wa">WA resmi dokumen: <b>{office.whatsapp_notification}</b></span>,
           ]} />
           <div className="card card-pad">
-            <div className="eyebrow" style={{ marginBottom: 12 }}>Nomor Agenda Manual</div>
+            <div className="eyebrow" style={{ marginBottom: 12 }}>Nomor Agenda Otomatis</div>
             <p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.75, margin: 0 }}>
-              Isi nomor agenda surat keluar manual sebagai nomor urut tanpa huruf atau prefix, misalnya 0233.
+              Nomor agenda surat keluar diisi otomatis oleh sistem sebagai nomor urut `1, 2, 3, 4, ...` tanpa huruf dan tanpa nol di depan.
             </p>
           </div>
         </>
@@ -347,13 +419,13 @@ function FormSuratKeluar({ go }) {
     >
       <div className="eyebrow" style={{ marginBottom: 18 }}>Detail Surat</div>
       <div style={grid2}>
-        <Field label="Nomor Agenda" req hint="Isi manual nomor urut tanpa huruf atau prefix.">
+        <Field label="Nomor Agenda" req hint="Nomor agenda diisi otomatis oleh sistem saat surat disimpan.">
           <input
             className="input tabnum"
             value={form.agenda_no}
-            onChange={(event) => patch({ agenda_no: event.target.value })}
-            placeholder="Contoh: 0233"
+            placeholder="Otomatis saat simpan"
             inputMode="numeric"
+            readOnly
           />
         </Field>
         <Field label="Asal Surat (Unit)" req>

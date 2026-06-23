@@ -9,11 +9,21 @@ Jalankan file berikut ke database Supabase:
 - `supabase/migrations/20260619_add_whatsapp_notification_logs.sql`
 - `supabase/migrations/20260619_set_temp_whatsapp_notification.sql`
 
+Jika Anda juga menerapkan perubahan branch terbaru untuk agenda manual surat, jalankan juga:
+
+- `supabase/migrations/20260623_make_agenda_manual.sql`
+- `supabase/migrations/20260623_normalize_manual_agenda_validation.sql`
+
 Tabel ini dipakai untuk:
 
 - mencegah notifikasi dobel untuk surat yang sama
 - menyimpan hasil kirim `queued`, `failed`, atau `skipped`
 - mendukung kirim ulang dari rekap surat masuk
+
+Catatan untuk migrasi agenda otomatis:
+
+- migrasi agenda terbaru akan mengurutkan ulang nomor agenda surat masuk dan surat keluar menjadi `1, 2, 3, 4, ...` berdasarkan urutan input data (`created_at`, lalu `id`)
+- setelah itu surat baru akan mendapat nomor agenda berikutnya secara otomatis dari database
 
 ## 2. Atur environment variable di Vercel
 
