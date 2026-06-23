@@ -34,22 +34,9 @@ function paginateRows(rows, page, perPage) {
   return {
     totalPages,
     pageRows: rows.slice((safePage - 1) * perPage, safePage * perPage),
+    startIndex: (safePage - 1) * perPage,
     safePage,
   };
-}
-
-function sortRowsByAgendaAsc(rows) {
-  return rows.slice().sort((left, right) => {
-    const leftAgenda = Number(left.agenda_normalized_no || left.agenda_no || 0);
-    const rightAgenda = Number(right.agenda_normalized_no || right.agenda_no || 0);
-    if (leftAgenda !== rightAgenda) return leftAgenda - rightAgenda;
-
-    const leftCreated = new Date(left.created_at || 0).getTime();
-    const rightCreated = new Date(right.created_at || 0).getTime();
-    if (leftCreated !== rightCreated) return leftCreated - rightCreated;
-
-    return String(left.id || "").localeCompare(String(right.id || ""), "id-ID");
-  });
 }
 
 function filterIncomingRows(rows, query, priority) {
@@ -77,8 +64,8 @@ function RekapSuratMasuk({ go }) {
   const [priority, setPriority] = useState("Semua");
   const [query, setQuery] = useState("");
   const rows = AppSelectors.incomingLetters();
-  const filtered = sortRowsByAgendaAsc(filterIncomingRows(rows, query, priority));
-  const { totalPages, pageRows, safePage } = paginateRows(filtered, page, 8);
+  const filtered = filterIncomingRows(rows, query, priority);
+  const { totalPages, pageRows, startIndex, safePage } = paginateRows(filtered, page, 8);
 
   useEffect(() => {
     if (safePage !== page) setPage(safePage);
@@ -117,9 +104,11 @@ function RekapSuratMasuk({ go }) {
               </tr>
             </thead>
             <tbody>
-              {pageRows.map((item) => (
+              {pageRows.map((item, index) => {
+                const displayAgendaNo = startIndex + index + 1;
+                return (
                 <tr key={item.id}>
-                  <td className="tabnum td-strong">{item.agenda_no}</td>
+                  <td className="tabnum td-strong">{displayAgendaNo}</td>
                   <td className="tabnum" style={{ fontSize: 12.5 }}>{item.letter_no}</td>
                   <td>
                     <div className="td-strong" style={{ maxWidth: 250 }}>{item.subject}</div>
@@ -143,13 +132,13 @@ function RekapSuratMasuk({ go }) {
                       whatsappTitle="Kirim / cek notifikasi WA otomatis"
                       onEdit={() => { AppApi.setFormContext("incoming", item.id); go("form-masuk"); }}
                       onDelete={async () => {
-                        const confirmed = await AppApi.confirmDeletion("surat masuk", `${item.agenda_no || "-"} · ${item.subject || item.letter_no || "-"}`, `Nomor surat: ${item.letter_no || "-"}`);
+                        const confirmed = await AppApi.confirmDeletion("surat masuk", `${displayAgendaNo} · ${item.subject || item.letter_no || "-"}`, `Nomor surat: ${item.letter_no || "-"}`);
                         if (confirmed) AppApi.deleteIncomingLetter(item.id);
                       }}
                     />
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
           {filtered.length === 0 && <EmptyHint icon="inbox">Tidak ada surat masuk yang sesuai filter.</EmptyHint>}
@@ -166,8 +155,8 @@ function RekapSuratKeluar({ go }) {
   const [query, setQuery] = useState("");
   const office = AppSelectors.office();
   const rows = AppSelectors.outgoingLetters();
-  const filtered = sortRowsByAgendaAsc(filterOutgoingRows(rows, query, priority));
-  const { totalPages, pageRows, safePage } = paginateRows(filtered, page, 8);
+  const filtered = filterOutgoingRows(rows, query, priority);
+  const { totalPages, pageRows, startIndex, safePage } = paginateRows(filtered, page, 8);
 
   useEffect(() => {
     if (safePage !== page) setPage(safePage);
@@ -206,9 +195,11 @@ function RekapSuratKeluar({ go }) {
               </tr>
             </thead>
             <tbody>
-              {pageRows.map((item) => (
+              {pageRows.map((item, index) => {
+                const displayAgendaNo = startIndex + index + 1;
+                return (
                 <tr key={item.id}>
-                  <td className="tabnum td-strong">{item.agenda_no}</td>
+                  <td className="tabnum td-strong">{displayAgendaNo}</td>
                   <td className="tabnum" style={{ fontSize: 12.5 }}>{item.letter_no}</td>
                   <td><div className="td-strong" style={{ maxWidth: 250 }}>{item.subject}</div></td>
                   <td>
@@ -229,13 +220,13 @@ function RekapSuratKeluar({ go }) {
                       whatsappTitle="Buka WhatsApp"
                       onEdit={() => { AppApi.setFormContext("outgoing", item.id); go("form-keluar"); }}
                       onDelete={async () => {
-                        const confirmed = await AppApi.confirmDeletion("surat keluar", `${item.agenda_no || "-"} · ${item.subject || item.letter_no || "-"}`, `Nomor surat: ${item.letter_no || "-"}`);
+                        const confirmed = await AppApi.confirmDeletion("surat keluar", `${displayAgendaNo} · ${item.subject || item.letter_no || "-"}`, `Nomor surat: ${item.letter_no || "-"}`);
                         if (confirmed) AppApi.deleteOutgoingLetter(item.id);
                       }}
                     />
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
           {filtered.length === 0 && <EmptyHint icon="send">Tidak ada surat keluar yang sesuai filter.</EmptyHint>}
