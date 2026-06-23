@@ -38,6 +38,20 @@ function paginateRows(rows, page, perPage) {
   };
 }
 
+function sortRowsByAgendaAsc(rows) {
+  return rows.slice().sort((left, right) => {
+    const leftAgenda = Number(left.agenda_normalized_no || left.agenda_no || 0);
+    const rightAgenda = Number(right.agenda_normalized_no || right.agenda_no || 0);
+    if (leftAgenda !== rightAgenda) return leftAgenda - rightAgenda;
+
+    const leftCreated = new Date(left.created_at || 0).getTime();
+    const rightCreated = new Date(right.created_at || 0).getTime();
+    if (leftCreated !== rightCreated) return leftCreated - rightCreated;
+
+    return String(left.id || "").localeCompare(String(right.id || ""), "id-ID");
+  });
+}
+
 function filterIncomingRows(rows, query, priority) {
   const keyword = String(query || "").trim().toLowerCase();
   return rows.filter((item) => {
@@ -63,7 +77,7 @@ function RekapSuratMasuk({ go }) {
   const [priority, setPriority] = useState("Semua");
   const [query, setQuery] = useState("");
   const rows = AppSelectors.incomingLetters();
-  const filtered = filterIncomingRows(rows, query, priority);
+  const filtered = sortRowsByAgendaAsc(filterIncomingRows(rows, query, priority));
   const { totalPages, pageRows, safePage } = paginateRows(filtered, page, 8);
 
   useEffect(() => {
@@ -152,7 +166,7 @@ function RekapSuratKeluar({ go }) {
   const [query, setQuery] = useState("");
   const office = AppSelectors.office();
   const rows = AppSelectors.outgoingLetters();
-  const filtered = filterOutgoingRows(rows, query, priority);
+  const filtered = sortRowsByAgendaAsc(filterOutgoingRows(rows, query, priority));
   const { totalPages, pageRows, safePage } = paginateRows(filtered, page, 8);
 
   useEffect(() => {
