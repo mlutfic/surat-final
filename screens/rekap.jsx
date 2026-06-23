@@ -39,6 +39,20 @@ function paginateRows(rows, page, perPage) {
   };
 }
 
+function sortRowsByCreatedAtDesc(rows) {
+  return rows.slice().sort((left, right) => {
+    const leftCreated = new Date(left.created_at || 0).getTime();
+    const rightCreated = new Date(right.created_at || 0).getTime();
+    if (leftCreated !== rightCreated) return rightCreated - leftCreated;
+
+    const leftUpdated = new Date(left.updated_at || 0).getTime();
+    const rightUpdated = new Date(right.updated_at || 0).getTime();
+    if (leftUpdated !== rightUpdated) return rightUpdated - leftUpdated;
+
+    return String(right.id || "").localeCompare(String(left.id || ""), "id-ID");
+  });
+}
+
 function filterIncomingRows(rows, query, priority) {
   const keyword = String(query || "").trim().toLowerCase();
   return rows.filter((item) => {
@@ -63,7 +77,7 @@ function RekapSuratMasuk({ go }) {
   const [page, setPage] = useState(1);
   const [priority, setPriority] = useState("Semua");
   const [query, setQuery] = useState("");
-  const rows = AppSelectors.incomingLetters();
+  const rows = sortRowsByCreatedAtDesc(AppSelectors.incomingLetters());
   const filtered = filterIncomingRows(rows, query, priority);
   const { totalPages, pageRows, startIndex, safePage } = paginateRows(filtered, page, 8);
 
@@ -154,7 +168,7 @@ function RekapSuratKeluar({ go }) {
   const [priority, setPriority] = useState("Semua");
   const [query, setQuery] = useState("");
   const office = AppSelectors.office();
-  const rows = AppSelectors.outgoingLetters();
+  const rows = sortRowsByCreatedAtDesc(AppSelectors.outgoingLetters());
   const filtered = filterOutgoingRows(rows, query, priority);
   const { totalPages, pageRows, startIndex, safePage } = paginateRows(filtered, page, 8);
 
