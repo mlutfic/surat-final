@@ -257,41 +257,29 @@
     });
   }
 
-  function agendaOrdinal(index) {
-    return String(index + 1).padStart(2, "0");
+  function decorateLetterRow(item) {
+    const displayAgenda = item?.agenda_no || "-";
+    return {
+      ...item,
+      agenda_db_no: item?.agenda_no || "",
+      agenda_display_no: displayAgenda,
+      agenda_no: displayAgenda,
+    };
   }
 
   function decorateLetterCollection(rows) {
-    const ordered = sortByDateDesc(rows, "created_at");
-    const agendaMap = new Map(ordered.map((item, index) => [item.id, agendaOrdinal(index)]));
-    return rows.map((item) => {
-      const displayAgenda = agendaMap.get(item.id) || item.agenda_no || "-";
-      return {
-        ...item,
-        agenda_db_no: item.agenda_no || "",
-        agenda_display_no: displayAgenda,
-        agenda_no: displayAgenda,
-      };
-    });
+    return rows.map((item) => decorateLetterRow(item));
   }
 
   function decorateLetterRecord(kind, record) {
     if (!record) return null;
     const sourceRows = kind === "incoming" ? store.data.incomingLetters : store.data.outgoingLetters;
     const matched = decorateLetterCollection(sourceRows).find((item) => item.id === record.id);
-    if (!matched) {
-      return {
-        ...record,
-        agenda_db_no: record.agenda_no || "",
-        agenda_display_no: record.agenda_no || "-",
-      };
-    }
-    return {
+    if (!matched) return decorateLetterRow(record);
+    return decorateLetterRow({
       ...record,
-      agenda_db_no: record.agenda_no || matched.agenda_db_no || "",
-      agenda_display_no: matched.agenda_display_no || matched.agenda_no || "-",
-      agenda_no: matched.agenda_no || record.agenda_no || "-",
-    };
+      agenda_no: matched.agenda_db_no || record.agenda_no || "",
+    });
   }
 
   function scopeBySession(rows, session, kind) {

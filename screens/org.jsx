@@ -227,6 +227,31 @@ function EmployeeEditor({ form, setForm, onSave, onCancel, busy }) {
   );
 }
 
+function emptyEmployeeForm() {
+  return {
+    id: "",
+    full_name: "",
+    nip: "",
+    position: "",
+    grade: "-",
+    work_unit: "",
+    employment_status: "PNS",
+  };
+}
+
+function employeeFormValue(employee) {
+  if (!employee) return emptyEmployeeForm();
+  return {
+    id: employee.id || "",
+    full_name: employee.full_name || "",
+    nip: employee.nip || "",
+    position: employee.position || "",
+    grade: employee.grade || "-",
+    work_unit: employee.work_unit || "",
+    employment_status: employee.employment_status || "PNS",
+  };
+}
+
 const EMPLOYEE_POSITION_ORDER = {
   "camat air hitam": 0,
   "sekcam air hitam": 1,
@@ -267,7 +292,7 @@ function sortEmployees(left, right) {
   return String(left.full_name || "").localeCompare(String(right.full_name || ""), "id-ID");
 }
 
-function EmployeeTableSection({ status, items, onEdit, onDelete }) {
+function EmployeeTableSection({ status, items, onView, onEdit, onDelete }) {
   return (
     <div className="card employee-roster-card" style={{ marginTop: 18 }}>
       <div className="card-pad" style={{ paddingBottom: 14 }}>
@@ -311,7 +336,7 @@ function EmployeeTableSection({ status, items, onEdit, onDelete }) {
                 </td>
                 <td className="employee-roster-actions">
                   <RowActions
-                    onView={() => onEdit(item, "view")}
+                    onView={() => onView(item)}
                     onEdit={() => onEdit(item)}
                     onDelete={() => onDelete(item)}
                     viewTitle="Detail Pegawai"
@@ -369,18 +394,14 @@ function DataKepegawaian() {
   const [filter, setFilter] = useState("Semua");
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
-  const [form, setForm] = useState({
-    id: "",
-    full_name: "",
-    nip: "",
-    position: "",
-    grade: "-",
-    work_unit: "",
-    employment_status: "PNS",
-  });
+  const [form, setForm] = useState(() => emptyEmployeeForm());
   const [editing, setEditing] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
+  const actionPanelRef = useRef(null);
   const employees = AppSelectors.employees();
+  const selectedEmployee = selectedEmployeeId
+    ? employees.find((item) => item.id === selectedEmployeeId) || null
+    : null;
 
   const counts = employees.reduce((carry, item) => {
     carry[item.employment_status] = (carry[item.employment_status] || 0) + 1;
@@ -404,13 +425,49 @@ function DataKepegawaian() {
 
   const visibleCount = grouped.reduce((sum, section) => sum + section.items.length, 0);
 
+  useEffect(() => {
+    if (!editing && !selectedEmployeeId) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      actionPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [editing, selectedEmployeeId]);
+
+  function openEmployeeDetail(item) {
+    setEditing(false);
+    setSelectedEmployeeId(item?.id || "");
+    setForm(employeeFormValue(item));
+  }
+
+  function startAddEmployee() {
+    setSelectedEmployeeId("");
+    setEditing(true);
+    setForm(emptyEmployeeForm());
+  }
+
+  function startEditEmployee(item) {
+    setSelectedEmployeeId(item?.id || "");
+    setEditing(true);
+    setForm(employeeFormValue(item));
+  }
+
+  function closeEditor() {
+    setEditing(false);
+    if (form.id) {
+      setSelectedEmployeeId(form.id);
+      return;
+    }
+    setSelectedEmployeeId("");
+    setForm(emptyEmployeeForm());
+  }
+
   async function save() {
     setBusy(true);
     try {
       await AppApi.saveEmployee(form);
       setEditing(false);
-      setSelectedEmployee(null);
-      setForm({ id: "", full_name: "", nip: "", position: "", grade: "-", work_unit: "", employment_status: "PNS" });
+      setSelectedEmployeeId(form.id || "");
+      setForm(emptyEmployeeForm());
     } catch (error) {
       AppApi.setNotice(error.message || "Gagal menyimpan pegawai.", "danger");
     } finally {
@@ -423,7 +480,7 @@ function DataKepegawaian() {
     if (!confirmed) return;
     try {
       await AppApi.deleteEmployee(item.id);
-      setSelectedEmployee((value) => (value?.id === item.id ? null : value));
+      setSelectedEmployeeId((value) => (value === item.id ? "" : value));
     } catch (error) {
       AppApi.setNotice(error.message || "Gagal menghapus pegawai.", "danger");
     }
@@ -436,23 +493,22 @@ function DataKepegawaian() {
         title="Data Kepegawaian"
         sub={`${employees.length} pegawai terdaftar · ${counts.PNS || 0} PNS · ${counts.PPPK || 0} PPPK`}
         actions={
-          <button type="button" className="btn btn-primary" onClick={() => { setEditing(true); setSelectedEmployee(null); setForm({ id: "", full_name: "", nip: "", position: "", grade: "-", work_unit: "", employment_status: "PNS" }); }}>
+          <button type="button" className="btn btn-primary" onClick={startAddEmployee}>
             <Icon name="plus" size={15} />Tambah Pegawai
           </button>
         }
       />
-      {editing && <EmployeeEditor form={form} setForm={setForm} busy={busy} onSave={save} onCancel={() => setEditing(false)} />}
-      {!editing && selectedEmployee && (
-        <EmployeeDetailCard
-          employee={selectedEmployee}
-          onClose={() => setSelectedEmployee(null)}
-          onEdit={(item) => {
-            setEditing(true);
-            setForm({ ...item });
-          }}
-          onDelete={removeEmployee}
-        />
-      )}
+      <div ref={actionPanelRef}>
+        {editing && <EmployeeEditor form={form} setForm={setForm} busy={busy} onSave={save} onCancel={closeEditor} />}
+        {!editing && selectedEmployee && (
+          <EmployeeDetailCard
+            employee={selectedEmployee}
+            onClose={() => { setSelectedEmployeeId(""); setForm(emptyEmployeeForm()); }}
+            onEdit={startEditEmployee}
+            onDelete={removeEmployee}
+          />
+        )}
+      </div>
       <div className="stat-grid" style={{ marginBottom: 18, gridTemplateColumns: "repeat(3, 1fr)" }}>
         <div className="stat">
           <div className="si" style={{ background: "var(--info-bg)", color: "var(--info)" }}><Icon name="users" size={20} /></div>
@@ -487,16 +543,8 @@ function DataKepegawaian() {
           key={section.status}
           status={section.status}
           items={section.items}
-          onEdit={(item, mode = "edit") => {
-            if (mode === "view") {
-              setEditing(false);
-              setSelectedEmployee({ ...item });
-              return;
-            }
-            setSelectedEmployee(null);
-            setEditing(true);
-            setForm({ ...item });
-          }}
+          onView={openEmployeeDetail}
+          onEdit={startEditEmployee}
           onDelete={removeEmployee}
         />
       ))}
