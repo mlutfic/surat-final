@@ -46,8 +46,9 @@ module.exports = async function handler(req, res) {
     const targetNumber = normalizeWhatsappNumber(office?.whatsapp_notification);
     const provider = WHATSAPP_PROVIDER;
     const existingLog = await getNotificationLog(letter.id);
+    const normalizedAgendaNo = normalizeAgendaNumber(letter.agenda_no);
     const requestContext = {
-      agenda_no: letter.agenda_no || "",
+      agenda_no: normalizedAgendaNo || "",
       letter_no: letter.letter_no || "",
       letter_date: letter.letter_date || "",
       source_name: letter.source_name || "",
@@ -258,11 +259,19 @@ function respond(res, statusCode, payload) {
   res.status(statusCode).end(JSON.stringify(payload));
 }
 
+function normalizeAgendaNumber(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (/^\d+$/.test(raw)) return raw;
+  const digits = raw.match(/(\d+)$/)?.[1];
+  return digits || raw;
+}
+
 function buildIncomingWhatsappMessage(letter, office) {
   return [
     "Pemberitahuan Surat Masuk Baru",
     "",
-    `Nomor agenda: ${letter.agenda_no || "-"}`,
+    `Nomor agenda: ${normalizeAgendaNumber(letter.agenda_no) || "-"}`,
     `Nomor surat: ${letter.letter_no || "-"}`,
     `Tanggal surat: ${formatDateId(letter.letter_date)}`,
     `Asal surat: ${letter.source_name || "-"}`,
@@ -470,7 +479,7 @@ async function sendViaGenericWebhook({ targetNumber, message, office, letter }) 
       eventType: "incoming_created",
       letter: {
         id: letter.id,
-        agenda_no: letter.agenda_no,
+        agenda_no: normalizeAgendaNumber(letter.agenda_no),
         letter_no: letter.letter_no,
         letter_date: letter.letter_date,
         source_name: letter.source_name,

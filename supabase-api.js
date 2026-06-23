@@ -257,8 +257,25 @@
     });
   }
 
+  function normalizeAgendaNumber(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    if (/^\d+$/.test(raw)) return raw;
+    const digits = raw.match(/(\d+)$/)?.[1];
+    return digits || raw;
+  }
+
+  function requireManualAgenda(value, label) {
+    const raw = String(value || "").trim();
+    if (!raw) throw new Error(`${label} wajib diisi manual.`);
+    if (!/^\d+$/.test(raw)) {
+      throw new Error(`${label} harus berupa nomor urut angka tanpa huruf atau prefix.`);
+    }
+    return raw;
+  }
+
   function decorateLetterRow(item) {
-    const displayAgenda = item?.agenda_no || "-";
+    const displayAgenda = normalizeAgendaNumber(item?.agenda_no) || "-";
     return {
       ...item,
       agenda_db_no: item?.agenda_no || "",
@@ -590,12 +607,14 @@
   }
 
   async function saveIncomingLetter(form) {
+    const agendaNo = requireManualAgenda(form.agenda_no, "Nomor agenda surat masuk");
     const attachment = await buildFilePayload(form);
     const isNewRecord = !form.id;
     const record = await rpc("upsert_incoming_letter", {
       p_session_token: store.session?.token,
       p_payload: {
         id: form.id || null,
+        agenda_no: agendaNo,
         letter_no: form.letter_no,
         letter_date: form.letter_date,
         service_type_id: form.service_type_id || "",
@@ -638,11 +657,13 @@
   }
 
   async function saveOutgoingLetter(form) {
+    const agendaNo = requireManualAgenda(form.agenda_no, "Nomor agenda surat keluar");
     const attachment = await buildFilePayload(form);
     await rpc("upsert_outgoing_letter", {
       p_session_token: store.session?.token,
       p_payload: {
         id: form.id || null,
+        agenda_no: agendaNo,
         letter_no: form.letter_no,
         letter_date: form.letter_date,
         source_unit: form.source_unit,

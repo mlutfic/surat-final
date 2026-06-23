@@ -176,7 +176,7 @@ function FormSuratMasuk({ go }) {
         <>
           <WaPreview lines={[
             <b key="title">📩 Surat Masuk</b>,
-            <span key="agenda">No. Agenda: <b>{form.agenda_no || "Otomatis saat disimpan"}</b></span>,
+            <span key="agenda">No. Agenda: <b>{form.agenda_no || "Isi manual"}</b></span>,
             <span key="subject">Perihal: {form.subject || "-"}</span>,
             <span key="meta">Sifat: <b>{form.priority}</b> · {formatDateId(form.letter_date)}</span>,
             <span key="wa">WA resmi dokumen: <b>{office.whatsapp_notification}</b></span>,
@@ -185,7 +185,7 @@ function FormSuratMasuk({ go }) {
           <div className="card card-pad">
             <div className="eyebrow" style={{ marginBottom: 12 }}>Petunjuk Pengisian</div>
             <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.85 }}>
-              <li>Nomor agenda surat masuk dibuat otomatis oleh database sebagai nomor urut surat masuk.</li>
+              <li>Nomor agenda surat masuk diisi manual sebagai nomor urut tanpa huruf atau prefix, misalnya 0155.</li>
               <li>Operator desa hanya dapat mencatat surat dari unit desanya sendiri agar alur lebih konsisten.</li>
               <li>Notifikasi WhatsApp otomatis hanya dikirim untuk surat masuk baru yang langsung disimpan, bukan draft atau edit data lama.</li>
               <li>Unduh dan cetak akan aktif penuh setelah surat tersimpan.</li>
@@ -196,8 +196,14 @@ function FormSuratMasuk({ go }) {
     >
       <div className="eyebrow" style={{ marginBottom: 18 }}>Detail Surat</div>
       <div style={grid2}>
-        <Field label="Nomor Agenda">
-          <input className="input tabnum" value={form.agenda_no || "Otomatis saat disimpan"} readOnly />
+        <Field label="Nomor Agenda" req hint="Isi manual nomor urut tanpa huruf atau prefix.">
+          <input
+            className="input tabnum"
+            value={form.agenda_no}
+            onChange={(event) => patch({ agenda_no: event.target.value })}
+            placeholder="Contoh: 0155"
+            inputMode="numeric"
+          />
         </Field>
         <Field label="Jenis Layanan" req>
           <select className="select" value={form.service_type_id} onChange={(event) => patch({ service_type_id: event.target.value })}>
@@ -325,15 +331,15 @@ function FormSuratKeluar({ go }) {
         <>
           <WaPreview lines={[
             <b key="title">📤 Surat Keluar</b>,
-            <span key="agenda">No. Agenda: <b>{form.agenda_no || "Otomatis saat disimpan"}</b></span>,
+            <span key="agenda">No. Agenda: <b>{form.agenda_no || "Isi manual"}</b></span>,
             <span key="dest">Tujuan: {form.destination_name || "-"}</span>,
             <span key="meta">Sifat: <b>{form.priority}</b> · {formatDateId(form.letter_date)}</span>,
             <span key="wa">WA resmi dokumen: <b>{office.whatsapp_notification}</b></span>,
           ]} />
           <div className="card card-pad">
-            <div className="eyebrow" style={{ marginBottom: 12 }}>Penomoran Otomatis</div>
+            <div className="eyebrow" style={{ marginBottom: 12 }}>Nomor Agenda Manual</div>
             <p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.75, margin: 0 }}>
-              Nomor agenda surat keluar akan ditetapkan otomatis oleh database sebagai nomor urut surat keluar.
+              Isi nomor agenda surat keluar manual sebagai nomor urut tanpa huruf atau prefix, misalnya 0233.
             </p>
           </div>
         </>
@@ -341,8 +347,14 @@ function FormSuratKeluar({ go }) {
     >
       <div className="eyebrow" style={{ marginBottom: 18 }}>Detail Surat</div>
       <div style={grid2}>
-        <Field label="Nomor Agenda">
-          <input className="input tabnum" value={form.agenda_no || "Otomatis saat disimpan"} readOnly />
+        <Field label="Nomor Agenda" req hint="Isi manual nomor urut tanpa huruf atau prefix.">
+          <input
+            className="input tabnum"
+            value={form.agenda_no}
+            onChange={(event) => patch({ agenda_no: event.target.value })}
+            placeholder="Contoh: 0233"
+            inputMode="numeric"
+          />
         </Field>
         <Field label="Asal Surat (Unit)" req>
           {isVillageUser ? (
