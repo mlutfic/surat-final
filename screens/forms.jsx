@@ -221,7 +221,8 @@ function FormSuratMasuk({ go }) {
           <div className="card card-pad">
             <div className="eyebrow" style={{ marginBottom: 12 }}>Petunjuk Pengisian</div>
             <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.85 }}>
-              <li>Nomor agenda surat masuk diisi otomatis oleh sistem sebagai nomor urut `1, 2, 3, 4, ...` tanpa huruf dan tanpa nol di depan.</li>
+              <li>Nomor agenda surat masuk diisi otomatis oleh sistem sebagai nomor urut `1, 2, 3, 4, ...` berdasarkan tanggal surat paling lama ke paling baru.</li>
+              <li>Jika ada surat lama yang baru dicatat atau tanggal surat diedit, nomor agenda surat lain bisa ikut menyesuaikan agar tetap berurutan.</li>
               <li>Operator desa hanya dapat mencatat surat dari unit desanya sendiri agar alur lebih konsisten.</li>
               <li>Notifikasi WhatsApp otomatis hanya dikirim untuk surat masuk baru yang langsung disimpan, bukan draft atau edit data lama.</li>
               <li>Unduh dan cetak akan aktif penuh setelah surat tersimpan.</li>
@@ -232,7 +233,7 @@ function FormSuratMasuk({ go }) {
     >
       <div className="eyebrow" style={{ marginBottom: 18 }}>Detail Surat</div>
       <div style={grid2}>
-        <Field label="Nomor Agenda" req hint="Nomor agenda diisi otomatis oleh sistem saat surat disimpan.">
+        <Field label="Nomor Agenda" req hint="Nomor agenda diisi otomatis oleh sistem mengikuti urutan tanggal surat saat surat disimpan.">
           <input
             className="input tabnum"
             value={form.agenda_no}
@@ -411,7 +412,7 @@ function FormSuratKeluar({ go }) {
           <div className="card card-pad">
             <div className="eyebrow" style={{ marginBottom: 12 }}>Nomor Agenda Otomatis</div>
             <p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.75, margin: 0 }}>
-              Nomor agenda surat keluar diisi otomatis oleh sistem sebagai nomor urut `1, 2, 3, 4, ...` tanpa huruf dan tanpa nol di depan.
+              Nomor agenda surat keluar diisi otomatis oleh sistem sebagai nomor urut `1, 2, 3, 4, ...` berdasarkan tanggal surat. Jika surat lama baru dimasukkan atau tanggal surat diubah, nomor agenda lain akan menyesuaikan agar tetap berurutan.
             </p>
           </div>
         </>
@@ -419,7 +420,7 @@ function FormSuratKeluar({ go }) {
     >
       <div className="eyebrow" style={{ marginBottom: 18 }}>Detail Surat</div>
       <div style={grid2}>
-        <Field label="Nomor Agenda" req hint="Nomor agenda diisi otomatis oleh sistem saat surat disimpan.">
+        <Field label="Nomor Agenda" req hint="Nomor agenda diisi otomatis oleh sistem mengikuti urutan tanggal surat saat surat disimpan.">
           <input
             className="input tabnum"
             value={form.agenda_no}

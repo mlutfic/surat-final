@@ -38,8 +38,12 @@ function paginateRows(rows, page, perPage) {
   };
 }
 
-function sortRowsByCreatedAtAsc(rows) {
+function sortRowsByLetterDateAsc(rows) {
   return rows.slice().sort((left, right) => {
+    const leftDate = new Date(left.letter_date || left.created_at || 0).getTime();
+    const rightDate = new Date(right.letter_date || right.created_at || 0).getTime();
+    if (leftDate !== rightDate) return leftDate - rightDate;
+
     const leftCreated = new Date(left.created_at || 0).getTime();
     const rightCreated = new Date(right.created_at || 0).getTime();
     if (leftCreated !== rightCreated) return leftCreated - rightCreated;
@@ -76,7 +80,7 @@ function RekapSuratMasuk({ go }) {
   const [page, setPage] = useState(1);
   const [priority, setPriority] = useState("Semua");
   const [query, setQuery] = useState("");
-  const rows = sortRowsByCreatedAtAsc(AppSelectors.incomingLetters());
+  const rows = sortRowsByLetterDateAsc(AppSelectors.incomingLetters());
   const filtered = filterIncomingRows(rows, query, priority);
   const { totalPages, pageRows, safePage } = paginateRows(filtered, page, 8);
   const latestLetterDate = rows[rows.length - 1]?.letter_date || rows[0]?.letter_date;
@@ -168,7 +172,7 @@ function RekapSuratKeluar({ go }) {
   const [priority, setPriority] = useState("Semua");
   const [query, setQuery] = useState("");
   const office = AppSelectors.office();
-  const rows = sortRowsByCreatedAtAsc(AppSelectors.outgoingLetters());
+  const rows = sortRowsByLetterDateAsc(AppSelectors.outgoingLetters());
   const filtered = filterOutgoingRows(rows, query, priority);
   const { totalPages, pageRows, safePage } = paginateRows(filtered, page, 8);
   const latestLetterDate = rows[rows.length - 1]?.letter_date || rows[0]?.letter_date;

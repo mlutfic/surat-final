@@ -1222,7 +1222,7 @@
 
   function exportLetters(kind) {
     const rows = kind === "incoming"
-      ? scopeBySession(sortByDateAsc(decorateLetterCollection(store.data.incomingLetters), "created_at"), store.session, "incoming").map((item) => [
+      ? scopeBySession(sortByDateAsc(decorateLetterCollection(store.data.incomingLetters), "letter_date"), store.session, "incoming").map((item) => [
           item.agenda_no,
           item.letter_no,
           serviceTypeName(item),
@@ -1233,7 +1233,7 @@
           item.priority,
           item.status,
         ])
-      : scopeBySession(sortByDateAsc(decorateLetterCollection(store.data.outgoingLetters), "created_at"), store.session, "outgoing").map((item) => [
+      : scopeBySession(sortByDateAsc(decorateLetterCollection(store.data.outgoingLetters), "letter_date"), store.session, "outgoing").map((item) => [
           item.agenda_no,
           item.letter_no,
           item.subject,
