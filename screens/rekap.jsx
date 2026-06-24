@@ -34,22 +34,21 @@ function paginateRows(rows, page, perPage) {
   return {
     totalPages,
     pageRows: rows.slice((safePage - 1) * perPage, safePage * perPage),
-    startIndex: (safePage - 1) * perPage,
     safePage,
   };
 }
 
-function sortRowsByCreatedAtDesc(rows) {
+function sortRowsByCreatedAtAsc(rows) {
   return rows.slice().sort((left, right) => {
     const leftCreated = new Date(left.created_at || 0).getTime();
     const rightCreated = new Date(right.created_at || 0).getTime();
-    if (leftCreated !== rightCreated) return rightCreated - leftCreated;
+    if (leftCreated !== rightCreated) return leftCreated - rightCreated;
 
     const leftUpdated = new Date(left.updated_at || 0).getTime();
     const rightUpdated = new Date(right.updated_at || 0).getTime();
-    if (leftUpdated !== rightUpdated) return rightUpdated - leftUpdated;
+    if (leftUpdated !== rightUpdated) return leftUpdated - rightUpdated;
 
-    return String(right.id || "").localeCompare(String(left.id || ""), "id-ID");
+    return String(left.id || "").localeCompare(String(right.id || ""), "id-ID");
   });
 }
 
@@ -77,9 +76,10 @@ function RekapSuratMasuk({ go }) {
   const [page, setPage] = useState(1);
   const [priority, setPriority] = useState("Semua");
   const [query, setQuery] = useState("");
-  const rows = sortRowsByCreatedAtDesc(AppSelectors.incomingLetters());
+  const rows = sortRowsByCreatedAtAsc(AppSelectors.incomingLetters());
   const filtered = filterIncomingRows(rows, query, priority);
-  const { totalPages, pageRows, startIndex, safePage } = paginateRows(filtered, page, 8);
+  const { totalPages, pageRows, safePage } = paginateRows(filtered, page, 8);
+  const latestLetterDate = rows[rows.length - 1]?.letter_date || rows[0]?.letter_date;
 
   useEffect(() => {
     if (safePage !== page) setPage(safePage);
@@ -100,7 +100,7 @@ function RekapSuratMasuk({ go }) {
         onSearch={(value) => { setQuery(value); setPage(1); }}
         activeFilter={priority}
         onFilterChange={(value) => { setPriority(value); setPage(1); }}
-        dateLabel={quarterLabel(rows[0]?.letter_date)}
+        dateLabel={quarterLabel(latestLetterDate)}
       />
       <div className="card">
         <div className="tbl-wrap">
@@ -118,8 +118,8 @@ function RekapSuratMasuk({ go }) {
               </tr>
             </thead>
             <tbody>
-              {pageRows.map((item, index) => {
-                const displayAgendaNo = startIndex + index + 1;
+              {pageRows.map((item) => {
+                const displayAgendaNo = item.agenda_no || "-";
                 return (
                 <tr key={item.id}>
                   <td className="tabnum td-strong">{displayAgendaNo}</td>
@@ -168,9 +168,10 @@ function RekapSuratKeluar({ go }) {
   const [priority, setPriority] = useState("Semua");
   const [query, setQuery] = useState("");
   const office = AppSelectors.office();
-  const rows = sortRowsByCreatedAtDesc(AppSelectors.outgoingLetters());
+  const rows = sortRowsByCreatedAtAsc(AppSelectors.outgoingLetters());
   const filtered = filterOutgoingRows(rows, query, priority);
-  const { totalPages, pageRows, startIndex, safePage } = paginateRows(filtered, page, 8);
+  const { totalPages, pageRows, safePage } = paginateRows(filtered, page, 8);
+  const latestLetterDate = rows[rows.length - 1]?.letter_date || rows[0]?.letter_date;
 
   useEffect(() => {
     if (safePage !== page) setPage(safePage);
@@ -191,7 +192,7 @@ function RekapSuratKeluar({ go }) {
         onSearch={(value) => { setQuery(value); setPage(1); }}
         activeFilter={priority}
         onFilterChange={(value) => { setPriority(value); setPage(1); }}
-        dateLabel={quarterLabel(rows[0]?.letter_date)}
+        dateLabel={quarterLabel(latestLetterDate)}
       />
       <div className="card">
         <div className="tbl-wrap">
@@ -209,8 +210,8 @@ function RekapSuratKeluar({ go }) {
               </tr>
             </thead>
             <tbody>
-              {pageRows.map((item, index) => {
-                const displayAgendaNo = startIndex + index + 1;
+              {pageRows.map((item) => {
+                const displayAgendaNo = item.agenda_no || "-";
                 return (
                 <tr key={item.id}>
                   <td className="tabnum td-strong">{displayAgendaNo}</td>

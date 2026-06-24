@@ -257,6 +257,18 @@
     });
   }
 
+  function sortByDateAsc(rows, field) {
+    return rows.slice().sort((left, right) => {
+      const leftTime = new Date(left[field] || left.created_at || 0).getTime();
+      const rightTime = new Date(right[field] || right.created_at || 0).getTime();
+      if (leftTime !== rightTime) return leftTime - rightTime;
+      const leftCreated = new Date(left.created_at || 0).getTime();
+      const rightCreated = new Date(right.created_at || 0).getTime();
+      if (leftCreated !== rightCreated) return leftCreated - rightCreated;
+      return String(left.id || "").localeCompare(String(right.id || ""), "id-ID");
+    });
+  }
+
   function normalizeAgendaNumber(value) {
     const raw = String(value || "").trim();
     if (!raw) return "";
@@ -1210,7 +1222,7 @@
 
   function exportLetters(kind) {
     const rows = kind === "incoming"
-      ? scopeBySession(sortByDateDesc(decorateLetterCollection(store.data.incomingLetters), "created_at"), store.session, "incoming").map((item) => [
+      ? scopeBySession(sortByDateAsc(decorateLetterCollection(store.data.incomingLetters), "created_at"), store.session, "incoming").map((item) => [
           item.agenda_no,
           item.letter_no,
           serviceTypeName(item),
@@ -1221,7 +1233,7 @@
           item.priority,
           item.status,
         ])
-      : scopeBySession(sortByDateDesc(decorateLetterCollection(store.data.outgoingLetters), "created_at"), store.session, "outgoing").map((item) => [
+      : scopeBySession(sortByDateAsc(decorateLetterCollection(store.data.outgoingLetters), "created_at"), store.session, "outgoing").map((item) => [
           item.agenda_no,
           item.letter_no,
           item.subject,
